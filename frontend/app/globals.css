@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  min-height: 100vh;
+}
+
+/* Custom styles for Sudoku board */
+.sudoku-cell {
+  @apply w-12 h-12 text-center text-lg font-semibold border border-gray-300 
+         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+         transition-all duration-150;
+}
+
+.sudoku-cell:disabled {
+  @apply bg-gray-50 cursor-not-allowed;
+}
+
+.sudoku-cell.user-input {
+  @apply text-gray-900 bg-white;
+}
+
+.sudoku-cell.ai-solution {
+  @apply text-blue-600 bg-blue-50;
+}
+
+.sudoku-cell.error {
+  @apply text-red-600 bg-red-50 border-red-500;
+}
+
+/* Thick borders for 3x3 boxes */
+.sudoku-cell-border-right {
+  @apply border-r-2 border-r-gray-800;
+}
+
+.sudoku-cell-border-bottom {
+  @apply border-b-2 border-b-gray-800;
+}
+
