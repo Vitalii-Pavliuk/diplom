@@ -4,10 +4,15 @@ import React, { useState, useEffect } from 'react';
 import SudokuBoard, { CellState } from '@/components/SudokuBoard';
 import Controls from '@/components/Controls';
 import { solveSudoku, getModelInfo, switchModel, checkHealth } from '@/lib/api';
+// ! ВАЖЛИВО: Переконайся, що ти створив файл lib/sudokuLogic.ts з кодом, який я давав раніше
+import { solveSudokuClassic, calculateAccuracy } from '@/lib/sudokuLogic';
 import { AlertCircle, CheckCircle2, Loader2, BrainCircuit } from 'lucide-react';
 
 // --- БАЗА ДАНИХ ПАЗЛІВ ---
 const PUZZLE_DB: Record<string, string[]> = {
+  easypeasy: [
+    '435260781680571493197830562826195047374082915951743620509326874248957130763410259',
+  ],
   easy: [
     '000000000000003085001020000000507000004000100090000000500000073002010000000040009',
     '530070000600195000098000060800060003400803001700020006060000280000419005000080079',
@@ -22,9 +27,7 @@ const PUZZLE_DB: Record<string, string[]> = {
     '000000000000003085001020000000507000004000100090000000500000073002010000000040009',
   ],
   impossible: [
-    // "AI Escargot" - Вважається найскладнішим судоку для людини
     '800000000003600000070090200050007000000045700000100030001000068008500010090000400',
-    // "Platinum Blonde"
     '000000000000003085001020000000507000004000100090000000500000073002010000000040009',
   ]
 };
@@ -32,6 +35,10 @@ const PUZZLE_DB: Record<string, string[]> = {
 export default function Home() {
   // Стан дошки
   const [board, setBoard] = useState<CellState[][]>(() => createEmptyBoard());
+  
+  // --- НОВІ СТАНИ ДЛЯ ТОЧНОСТІ ---
+  const [groundTruth, setGroundTruth] = useState<number[][] | null>(null);
+  const [realAccuracy, setRealAccuracy] = useState<number | null>(null);
   
   // UI стани
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +110,9 @@ export default function Home() {
       })
     );
     setBoard(newBoard);
-    setConfidence(null); // Скидаємо впевненість при зміні даних
+    // Скидаємо метрики при ручній зміні
+    setConfidence(null);
+    setRealAccuracy(null);
   };
   
   const handleSolve = async () => {
@@ -122,7 +131,6 @@ export default function Home() {
       const newBoard = board.map((row, rIdx) =>
         row.map((cell, cIdx) => ({
           value: response.solution[rIdx][cIdx],
-          // Якщо це число ввів користувач - залишаємо як є, інакше - це відповідь АІ
           isUserInput: cell.value !== 0 && cell.value === response.solution[rIdx][cIdx],
           isError: false,
         }))
@@ -130,6 +138,21 @@ export default function Home() {
       
       setBoard(newBoard);
       setConfidence(response.confidence || null);
+      
+      // --- РАХУЄМО РЕАЛЬНУ ТОЧНІСТЬ ---
+      let truth = groundTruth;
+      // Якщо раптом groundTruth немає (наприклад, ручне введення), спробуємо знайти зараз
+      if (!truth) {
+         truth = solveSudokuClassic(numberBoard);
+      }
+      
+      if (truth) {
+          const acc = calculateAccuracy(response.solution, truth);
+          setRealAccuracy(acc);
+      } else {
+          setRealAccuracy(null); // Не вдалося знайти еталонне рішення
+      }
+
       setMessage({
         type: 'success',
         text: `Solved using ${response.model_used} model`,
@@ -147,6 +170,8 @@ export default function Home() {
   const handleClear = () => {
     setBoard(createEmptyBoard());
     setConfidence(null);
+    setRealAccuracy(null);
+    setGroundTruth(null);
     setMessage(null);
   };
   
@@ -155,19 +180,27 @@ export default function Home() {
     const puzzles = PUZZLE_DB[diff] || PUZZLE_DB['easy'];
     const randomString = puzzles[Math.floor(Math.random() * puzzles.length)];
     
-    const newBoard = Array(9).fill(null).map((_, row) =>
-      Array(9).fill(null).map((_, col) => {
-        const idx = row * 9 + col;
-        const value = parseInt(randomString[idx]);
-        return { 
-            value, 
-            isUserInput: value !== 0, 
-            isError: false 
-        };
-      })
+    // Формуємо числовий масив для пошуку рішення
+    const newBoardNumbers = Array(9).fill(null).map((_, row) =>
+        Array(9).fill(0).map((_, col) => parseInt(randomString[row * 9 + col]))
     );
+
+    const newBoard = newBoardNumbers.map(row => 
+        row.map(val => ({ 
+            value: val, 
+            isUserInput: val !== 0, 
+            isError: false 
+        }))
+    );
+    
     setBoard(newBoard);
+    
+    // --- ЗНАХОДИМО ІДЕАЛЬНЕ РІШЕННЯ ОДРАЗУ ---
+    const truth = solveSudokuClassic(newBoardNumbers);
+    setGroundTruth(truth);
+
     setConfidence(null);
+    setRealAccuracy(null);
     setMessage({ type: 'info', text: `Loaded ${diff.toUpperCase()} puzzle` });
   };
 
@@ -189,7 +222,7 @@ export default function Home() {
     }
   };
 
-  // --- ЕКСПОРТ (Повернув логіку) ---
+  // --- ЕКСПОРТ ---
   const handleExport = () => {
     const numberBoard = boardToNumberArray(board);
     const json = JSON.stringify(numberBoard, null, 2);
@@ -203,7 +236,7 @@ export default function Home() {
     setMessage({ type: 'success', text: 'Board exported' });
   };
 
-  // --- ІМПОРТ (Повернув логіку) ---
+  // --- ІМПОРТ ---
   const handleImport = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -215,16 +248,22 @@ export default function Home() {
         reader.onload = (e) => {
           try {
             const json = JSON.parse(e.target?.result as string);
-            // Валідація JSON
             if (Array.isArray(json) && json.length === 9 && json.every((row: any) => Array.isArray(row) && row.length === 9)) {
               const newBoard = json.map((row: number[]) =>
                 row.map((value: number) => ({
                   value: typeof value === 'number' ? value : 0,
-                  isUserInput: value !== 0, // Вважаємо імпортовані дані як вхідні
+                  isUserInput: value !== 0,
                   isError: false,
                 }))
               );
               setBoard(newBoard);
+              // Спробуємо розв'язати імпортований пазл для Ground Truth
+              const numBoard = json as number[][];
+              const truth = solveSudokuClassic(numBoard);
+              setGroundTruth(truth);
+              setConfidence(null);
+              setRealAccuracy(null);
+              
               setMessage({ type: 'success', text: 'Board imported' });
             } else {
               setMessage({ type: 'error', text: 'Invalid board format' });
@@ -255,7 +294,6 @@ export default function Home() {
                 Thesis Project: Comparative Analysis of CNN vs GNN Architectures
             </p>
           
-            {/* Статус бекенду */}
             <div className={`mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium ${
                 apiHealthy ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
             }`}>
@@ -300,34 +338,15 @@ export default function Home() {
               currentModel={currentModel}
               onModelChange={handleModelChange}
               availableModels={availableModels}
-              // Передаємо нові параметри складності
               difficulty={difficulty}
               onDifficultyChange={setDifficulty}
+              // Передаємо нові пропси
+              confidence={confidence}
+              realAccuracy={realAccuracy}
             />
-            
-            {/* Графік впевненості */}
-            {confidence !== null && (
-              <div className="mt-6 bg-white rounded-xl shadow p-6 border border-gray-100">
-                <div className="flex justify-between items-end mb-2">
-                    <h3 className="text-gray-500 font-semibold uppercase text-xs tracking-wider">Model Confidence</h3>
-                    <span className="text-2xl font-bold text-gray-900">{(confidence * 100).toFixed(1)}%</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full transition-all duration-500 ${
-                        confidence > 0.8 ? 'bg-green-500' : confidence > 0.5 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}
-                    style={{ width: `${confidence * 100}%` }}
-                  />
-                </div>
-                <p className="text-xs text-gray-400 mt-2">
-                    Does the model "think" this is the correct solution?
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>
     </main>
   );
-} 
+}

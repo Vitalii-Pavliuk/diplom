@@ -13,9 +13,11 @@ interface ControlsProps {
   currentModel?: string;
   onModelChange?: (model: string) => void;
   availableModels?: string[];
-  // Нові пропси для складності
   difficulty: string;
   onDifficultyChange: (diff: string) => void;
+  // НОВІ ПРОПСИ
+  confidence: number | null;
+  realAccuracy: number | null;
 }
 
 export default function Controls({
@@ -30,6 +32,9 @@ export default function Controls({
   availableModels = ['baseline', 'advanced', 'gnn'],
   difficulty,
   onDifficultyChange,
+  // Деструктуризація
+  confidence,
+  realAccuracy,
 }: ControlsProps) {
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
@@ -58,7 +63,7 @@ export default function Controls({
         </div>
       )}
 
-      {/* 2. Генерація Пазлів (Оновлено) */}
+      {/* 2. Генерація Пазлів */}
       <div className="space-y-2 pt-2">
         <label className="block text-sm font-bold text-gray-700">
           Puzzle Generation
@@ -70,6 +75,7 @@ export default function Controls({
             disabled={isLoading}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50"
           >
+            <option value="easypeasy">Easy-peasy</option>
             <option value="easy">Easy</option>
             <option value="medium">Medium</option>
             <option value="hard">Hard</option>
@@ -106,8 +112,55 @@ export default function Controls({
           Clear Board
         </button>
       </div>
+
+      {/* --- 4. ВІЗУАЛІЗАЦІЯ МЕТРИК (НОВЕ) --- */}
+      {(confidence !== null || realAccuracy !== null) && (
+        <div className="pt-4 border-t border-gray-100 space-y-4">
+            
+            {/* Графік Впевненості */}
+            {confidence !== null && (
+            <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <div className="flex justify-between items-end mb-1">
+                    <h3 className="text-gray-500 font-bold uppercase text-[10px] tracking-wider">Model Confidence</h3>
+                    <span className="text-sm font-bold text-gray-700">{(confidence * 100).toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div 
+                    className={`h-full transition-all duration-500 ${confidence > 0.8 ? 'bg-yellow-400' : 'bg-yellow-600'}`}
+                    style={{ width: `${confidence * 100}%` }}
+                />
+                </div>
+            </div>
+            )}
+
+            {/* Графік Реальної Точності */}
+            {realAccuracy !== null && (
+            <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
+                <div className="flex justify-between items-end mb-1">
+                    <h3 className="text-blue-600 font-bold uppercase text-[10px] tracking-wider">Real Accuracy</h3>
+                    <span className={`text-sm font-black ${realAccuracy === 1 ? 'text-green-600' : 'text-blue-900'}`}>
+                        {(realAccuracy * 100).toFixed(1)}%
+                    </span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                <div 
+                    className={`h-full transition-all duration-500 ${
+                        realAccuracy === 1 ? 'bg-green-500' : realAccuracy > 0.9 ? 'bg-blue-500' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${realAccuracy * 100}%` }}
+                />
+                </div>
+                {realAccuracy < 1 && (
+                    <p className="text-[10px] text-red-500 mt-1 font-medium text-center">
+                        ⚠️ Mistakes found vs Ground Truth
+                    </p>
+                )}
+            </div>
+            )}
+        </div>
+      )}
       
-      {/* Import/Export (Small buttons) */}
+      {/* 5. Import/Export */}
       {(onExport || onImport) && (
         <div className="pt-4 border-t border-gray-200 grid grid-cols-2 gap-2">
             {onImport && (

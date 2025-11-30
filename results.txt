@@ -1,0 +1,124 @@
+Working directory: /content/drive/MyDrive/Diplom/backend
+============================================================
+Sudoku Neural Network Training
+============================================================
+Model: advanced
+Device: cuda
+Batch size: 128
+Epochs: 10
+Limit samples: 1000000
+============================================================
+
+Loading datasets...
+Loading data from data/sudoku.csv...
+Loaded training dataset with 800000 samples
+Loading data from data/sudoku.csv...
+Loaded validation dataset with 200000 samples
+
+Initializing model...
+Model parameters: 5,926,665
+
+Starting training...
+
+Epoch 1/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [11:06<00:00,  9.38it/s, loss=0.1522, cell_acc=0.9374, board_acc=0.2734]
+Validation: 100% 1563/1563 [01:00<00:00, 25.73it/s, loss=0.1360, cell_acc=0.9481, board_acc=0.3438]
+
+Train Loss: 0.2717 | Cell Acc: 0.8901 | Board Acc: 0.1846
+Val Loss: 0.1613 | Cell Acc: 0.9376 | Board Acc: 0.3072
+
+✓ Saved best model to weights/advanced_best.pth
+
+Epoch 2/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [11:09<00:00,  9.34it/s, loss=0.1440, cell_acc=0.9455, board_acc=0.4297]
+Validation: 100% 1563/1563 [01:00<00:00, 25.71it/s, loss=0.1139, cell_acc=0.9554, board_acc=0.3750]
+
+Train Loss: 0.1249 | Cell Acc: 0.9505 | Board Acc: 0.4025
+Val Loss: 0.1238 | Cell Acc: 0.9517 | Board Acc: 0.4213
+
+✓ Saved best model to weights/advanced_best.pth
+
+Epoch 3/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [11:07<00:00,  9.36it/s, loss=0.1135, cell_acc=0.9555, board_acc=0.3828]
+Validation: 100% 1563/1563 [01:00<00:00, 25.88it/s, loss=0.0927, cell_acc=0.9618, board_acc=0.5000]
+
+Train Loss: 0.1067 | Cell Acc: 0.9577 | Board Acc: 0.4654
+Val Loss: 0.1060 | Cell Acc: 0.9580 | Board Acc: 0.4701
+
+✓ Saved best model to weights/advanced_best.pth
+
+Epoch 4/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [11:04<00:00,  9.40it/s, loss=0.1079, cell_acc=0.9549, board_acc=0.4062]
+Validation: 100% 1563/1563 [01:00<00:00, 26.00it/s, loss=0.0961, cell_acc=0.9630, board_acc=0.4844]
+
+Train Loss: 0.0968 | Cell Acc: 0.9616 | Board Acc: 0.5034
+Val Loss: 0.1023 | Cell Acc: 0.9597 | Board Acc: 0.4958
+
+✓ Saved best model to weights/advanced_best.pth
+
+Epoch 5/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [11:00<00:00,  9.46it/s, loss=0.0808, cell_acc=0.9683, board_acc=0.5547]
+Validation: 100% 1563/1563 [00:59<00:00, 26.18it/s, loss=0.0915, cell_acc=0.9633, board_acc=0.4844]
+
+Train Loss: 0.0909 | Cell Acc: 0.9640 | Board Acc: 0.5279
+Val Loss: 0.0955 | Cell Acc: 0.9626 | Board Acc: 0.5226
+
+✓ Saved best model to weights/advanced_best.pth
+
+Epoch 6/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [10:57<00:00,  9.51it/s, loss=0.0629, cell_acc=0.9756, board_acc=0.5703]
+Validation: 100% 1563/1563 [00:59<00:00, 26.21it/s, loss=0.0855, cell_acc=0.9645, board_acc=0.5469]
+
+Train Loss: 0.0868 | Cell Acc: 0.9657 | Board Acc: 0.5450
+Val Loss: 0.0927 | Cell Acc: 0.9637 | Board Acc: 0.5303
+
+✓ Saved best model to weights/advanced_best.pth
+
+Epoch 7/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [10:54<00:00,  9.54it/s, loss=0.0911, cell_acc=0.9613, board_acc=0.5391]
+Validation: 100% 1563/1563 [00:59<00:00, 26.10it/s, loss=0.0900, cell_acc=0.9651, board_acc=0.5312]
+
+Train Loss: 0.0841 | Cell Acc: 0.9668 | Board Acc: 0.5570
+Val Loss: 0.0880 | Cell Acc: 0.9654 | Board Acc: 0.5440
+
+✓ Saved best model to weights/advanced_best.pth
+
+Epoch 8/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [10:54<00:00,  9.56it/s, loss=0.0719, cell_acc=0.9727, board_acc=0.5625]
+Validation: 100% 1563/1563 [00:59<00:00, 26.28it/s, loss=0.0787, cell_acc=0.9688, board_acc=0.5781]
+
+Train Loss: 0.0820 | Cell Acc: 0.9676 | Board Acc: 0.5662
+Val Loss: 0.0869 | Cell Acc: 0.9657 | Board Acc: 0.5539
+
+✓ Saved best model to weights/advanced_best.pth
+
+Epoch 9/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [10:52<00:00,  9.58it/s, loss=0.0847, cell_acc=0.9688, board_acc=0.5312]
+Validation: 100% 1563/1563 [00:59<00:00, 26.13it/s, loss=0.0737, cell_acc=0.9695, board_acc=0.5312]
+
+Train Loss: 0.0804 | Cell Acc: 0.9683 | Board Acc: 0.5746
+Val Loss: 0.0903 | Cell Acc: 0.9649 | Board Acc: 0.5528
+
+Epoch 10/10
+------------------------------------------------------------
+Training: 100% 6250/6250 [10:51<00:00,  9.59it/s, loss=0.0993, cell_acc=0.9608, board_acc=0.5078]
+Validation: 100% 1563/1563 [00:59<00:00, 26.27it/s, loss=0.0844, cell_acc=0.9684, board_acc=0.5469]
+
+Train Loss: 0.0790 | Cell Acc: 0.9688 | Board Acc: 0.5803
+Val Loss: 0.0851 | Cell Acc: 0.9667 | Board Acc: 0.5644
+
+✓ Saved best model to weights/advanced_best.pth
+
+============================================================
+Training completed!
+Best validation loss: 0.0851
+============================================================
