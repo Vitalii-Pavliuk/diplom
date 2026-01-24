@@ -1,183 +1,371 @@
-# Quick Start Guide
+# ⚡ Швидкий старт - NeuroSudoku
 
-Get the Sudoku Solver up and running in minutes!
+Цей гайд допоможе вам запустити проект за 5 хвилин!
 
-## Prerequisites
+---
 
-- Python 3.9 or higher
-- Node.js 18 or higher
-- pip and npm installed
+## 📋 Чеклист перед початком
 
-## Step-by-Step Setup
-
-### 1. Download the Dataset
-
-Before training any models, you need the Sudoku dataset:
-
-1. Download the "1 million Sudoku games" dataset from Kaggle or similar source
-2. The file should be a CSV with columns: `quizzes` and `solutions`
-3. Place it at: `backend/data/sudoku.csv`
-
-Example format:
-```csv
-quizzes,solutions
-004300209005009001070060043006002087190007400050083000600000105003508690042910300,864371259325849761971265843436192587198657432257483916689734125713528694542916378
-...
+```
+☐ Python 3.9+ встановлено
+☐ Node.js 18+ встановлено
+☐ Git встановлено
+☐ 8GB+ вільної RAM
+☐ Інтернет з'єднання для завантаження датасету
 ```
 
-### 2. Backend Setup (Windows)
+---
 
-```batch
-# Run the automated setup script
-start_backend.bat
-```
+## 🚀 5-хвилинний запуск
 
-**Or manually**:
-```batch
+### Крок 1: Backend (2 хвилини)
+
+```bash
+# Windows PowerShell / Linux Terminal
 cd backend
+
+# Створити віртуальне середовище
 python -m venv venv
+
+# Активувати
+# Windows:
 venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+# Встановити залежності (1-2 хвилини)
 pip install -r requirements.txt
+
+# Запустити (з прикладами даних, без навчання)
 python main.py
 ```
 
-### 2. Backend Setup (Mac/Linux)
+✅ **Backend запущено на http://localhost:8000**
+
+### Крок 2: Frontend (1 хвилина)
 
 ```bash
-# Run the automated setup script
-chmod +x start_backend.sh
-./start_backend.sh
+# Новий термінал
+cd frontend
+
+# Встановити залежності (30 сек)
+npm install
+
+# Запустити
+npm run dev
 ```
 
-**Or manually**:
+✅ **Frontend запущено на http://localhost:3000**
+
+### Крок 3: Використання
+
+1. Відкрийте браузер: http://localhost:3000
+2. Натисніть "Generate" для випадкового пазла
+3. Натисніть "SOLVE PUZZLE"
+4. Натисніть "Verify" для перевірки accuracy
+
+---
+
+## 📊 Швидкий тест (без датасету)
+
+Якщо у вас немає датасету, моделі все одно працюватимуть (untrained):
+
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python main.py
+
+# Тест архітектур
+python -m models.cnn_baseline    # ✓ Baseline CNN
+python -m models.cnn_advanced    # ✓ Advanced CNN
+python -m models.gnn_model       # ✓ GNN
+python -m models.rnn_model       # ✓ RNN
+
+# Тест API
+python example_usage.py          # ✓ Inference приклади
 ```
 
-The backend will start at: `http://localhost:8000`
+**Результат:** Моделі виведуть випадкові передбачення (не навчені), але ви побачите, що все працює!
 
-### 3. Frontend Setup (Windows)
+---
 
-**Open a new terminal**, then:
+## 🎓 Повноцінне навчання (опційно)
+
+### Підготовка датасету
+
+1. **Завантажити датасет:**
+   - Kaggle: [1 million Sudoku games](https://www.kaggle.com/datasets/bryanpark/sudoku)
+   - Або Google: "sudoku 1 million dataset csv"
+
+2. **Помістити файл:**
+   ```
+   backend/
+   └── data/
+       └── sudoku.csv  ← Покласти сюди
+   ```
+
+3. **Перевірити формат:**
+   ```bash
+   cd backend
+   python dataset.py
+   ```
+
+### Швидке навчання (тест)
+
+```bash
+# Швидкий тест на малій кількості даних
+python train.py --model baseline --limit 1000 --epochs 5
+
+# Очікуваний час: ~1 хвилина
+# Результат: weights/baseline_best.pth
+```
+
+### Повне навчання
+
+```bash
+# Baseline - найшвидше (рекомендовано для початку)
+python train.py --model baseline --epochs 20
+# Час: ~10 хвилин на CPU, ~2 хвилини на GPU
+
+# Advanced - краща точність
+python train.py --model advanced --epochs 20
+# Час: ~30 хвилин на CPU, ~5 хвилин на GPU
+
+# GNN - найкраща теоретично
+python train.py --model gnn --epochs 20 --batch-size 32
+# Час: ~60 хвилин на CPU, ~10 хвилин на GPU
+
+# RNN - експериментальна
+python train.py --model rnn --epochs 20
+# Час: ~15 хвилин на CPU, ~3 хвилини на GPU
+```
+
+---
+
+## 🎮 Використання скриптів
+
+### Windows
 
 ```batch
-# Run the automated setup script
+# Backend
+start_backend.bat
+
+# Frontend
 start_frontend.bat
 ```
 
-**Or manually**:
-```batch
-cd frontend
-npm install
-copy .env.local.example .env.local
-npm run dev
-```
-
-### 3. Frontend Setup (Mac/Linux)
-
-**Open a new terminal**, then:
+### Linux/Mac
 
 ```bash
-# Run the automated setup script
+# Зробити виконуваними (один раз)
+chmod +x start_backend.sh
 chmod +x start_frontend.sh
-./start_frontend.sh
+
+# Запустити
+./start_backend.sh    # Backend
+./start_frontend.sh   # Frontend
 ```
 
-**Or manually**:
+---
+
+## 🐛 Типові проблеми
+
+### Проблема 1: "ModuleNotFoundError: No module named 'torch'"
+
+**Рішення:**
 ```bash
-cd frontend
+# Перевірте, чи активоване venv
+# Windows:
+venv\Scripts\activate
+
+# Встановіть знову
+pip install -r requirements.txt
+```
+
+### Проблема 2: "CUDA out of memory"
+
+**Рішення:**
+```bash
+# Зменшіть batch size
+python train.py --model gnn --batch-size 16
+
+# Або використовуйте CPU
+python train.py --model gnn --device cpu
+```
+
+### Проблема 3: "torch_geometric not found"
+
+**Рішення:**
+```bash
+# Встановіть PyTorch Geometric
+pip install torch-geometric
+
+# Якщо не працює, спробуйте:
+pip install torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.0.0+cpu.html
+pip install torch-geometric
+```
+
+### Проблема 4: "Port 8000 already in use"
+
+**Рішення:**
+```bash
+# Windows: знайти процес
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
+
+# Linux/Mac: знайти процес
+lsof -i :8000
+kill -9 <PID>
+
+# Або змініть порт у main.py (рядок 328)
+uvicorn.run("main:app", host="0.0.0.0", port=8001)
+```
+
+### Проблема 5: "npm ERR! network"
+
+**Рішення:**
+```bash
+# Очистіть кеш
+npm cache clean --force
+
+# Встановіть знову
 npm install
-cp .env.local.example .env.local
-npm run dev
 ```
 
-The frontend will start at: `http://localhost:3000`
+---
 
-### 4. Open in Browser
+## 📂 Структура файлів після запуску
 
-Navigate to: **http://localhost:3000**
-
-You should see the Sudoku Solver interface!
-
-## Training Models (Optional)
-
-The backend can run with untrained models, but for better results, train them first:
-
-### Train Baseline CNN (fastest)
-```bash
-cd backend
-python train.py --model baseline --epochs 20 --batch-size 64
+```
+diplom/
+├── backend/
+│   ├── venv/              ← Віртуальне середовище
+│   ├── data/
+│   │   └── sudoku.csv     ← Датасет (якщо завантажено)
+│   ├── weights/           ← Збережені моделі (після навчання)
+│   │   ├── baseline_best.pth
+│   │   ├── advanced_best.pth
+│   │   ├── gnn_best.pth
+│   │   └── rnn_best.pth
+│   └── ...
+├── frontend/
+│   ├── node_modules/      ← Node.js пакети
+│   └── ...
 ```
 
-### Train Advanced CNN (best accuracy)
-```bash
-python train.py --model advanced --epochs 30 --batch-size 64
+---
+
+## ✅ Чеклист після запуску
+
+```
+☑ Backend запущено на http://localhost:8000
+☑ Frontend запущено на http://localhost:3000
+☑ Сторінка відкривається в браузері
+☑ "Backend Connected" показано зеленим
+☑ Можна згенерувати пазл (кнопка Generate)
+☑ Можна вирішити пазл (кнопка SOLVE PUZZLE)
+☑ Можна перемкнути модель (dropdown)
+☑ Показується confidence після рішення
+☑ Кнопка Verify працює
 ```
 
-### Train GNN (graph-based approach)
+---
+
+## 🎯 Швидкі команди (шпаргалка)
+
 ```bash
+# === BACKEND ===
+
+# Запустити API
+cd backend && python main.py
+
+# Навчити модель (швидко)
+python train.py --model baseline --epochs 20
+
+# Тест моделі
+python -m models.cnn_baseline
+
+# === FRONTEND ===
+
+# Запустити dev сервер
+cd frontend && npm run dev
+
+# Build для продакшну
+npm run build
+
+# === НАВЧАННЯ ===
+
+# Baseline (найшвидше)
+python train.py --model baseline --epochs 20
+
+# Advanced (найкраще)
+python train.py --model advanced --epochs 30
+
+# GNN (для дослідження)
 python train.py --model gnn --epochs 25 --batch-size 32
+
+# RNN (експеримент)
+python train.py --model rnn --epochs 20
+
+# З GPU
+python train.py --model advanced --device cuda --batch-size 128
+
+# Продовжити навчання
+python train.py --model gnn --resume weights/gnn_last.pth --epochs 50
+
+# === ДЕБАГ ===
+
+# Малий датасет
+python train.py --model baseline --limit 1000 --epochs 5
+
+# Тест датасету
+python dataset.py
+
+# Приклади використання
+python example_usage.py
 ```
 
-Training times (on GPU):
-- Baseline: ~30 minutes for 20 epochs
-- Advanced: ~2 hours for 30 epochs
-- GNN: ~1.5 hours for 25 epochs
+---
 
-## Using the Application
+## 📚 Наступні кроки
 
-1. **Enter a puzzle**: Click cells and type numbers (1-9)
-2. **Or load a sample**: Click "Generate Random"
-3. **Select a model**: Choose from the dropdown (Baseline/Advanced/GNN)
-4. **Solve**: Click "Solve with AI"
-5. **View results**: AI solutions appear in blue, your inputs in black
+Після успішного запуску:
 
-## Troubleshooting
+1. **Прочитайте головний README:** [README.md](README.md)
+2. **Вивчіть архітектури моделей:** [MODELS_EXPLAINED.md](MODELS_EXPLAINED.md)
+3. **Експериментуйте з гіперпараметрами:** змініть кількість епох, batch size
+4. **Порівняйте результати:** натренуйте всі 4 моделі і порівняйте accuracy
+5. **Візуалізуйте результати:** використайте метрики з `weights/*_history.json`
 
-### Backend won't start
-- Make sure Python 3.9+ is installed: `python --version`
-- Check if port 8000 is available
-- Verify PyTorch installation: `pip show torch`
+---
 
-### Frontend won't start
-- Make sure Node.js 18+ is installed: `node --version`
-- Clear npm cache: `npm cache clean --force`
-- Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
+## 🆘 Потрібна допомога?
 
-### API Connection Error
-- Ensure backend is running at `http://localhost:8000`
-- Check `.env.local` has correct API URL
-- Check browser console for CORS errors
+1. Перевірте [README.md](README.md) для детальної документації
+2. Перевірте [MODELS_EXPLAINED.md](MODELS_EXPLAINED.md) для пояснень архітектур
+3. Перевірте Issues в репозиторії
+4. Запустіть тести: `python -m models.cnn_baseline` тощо
 
-### Training Errors
-- Verify dataset is at `backend/data/sudoku.csv`
-- Check CSV format (must have `quizzes` and `solutions` columns)
-- Ensure enough disk space for model checkpoints
+---
 
-### CUDA/GPU Issues
-If you don't have a GPU, training will use CPU (slower but works):
-```bash
-python train.py --model baseline --device cpu
-```
+## 🎓 Для дипломної роботи
 
-## Next Steps
+**Мінімальний набір для захисту:**
 
-- Train all three models to compare performance
-- Experiment with different hyperparameters
-- Modify the frontend to add new features
-- Analyze model performance for your thesis
+1. ✅ Всі 4 моделі натреновані
+2. ✅ Порівняльна таблиця accuracy
+3. ✅ Графіки навчання (training curves)
+4. ✅ Робочий веб-застосунок
+5. ✅ Документація (README + коментарі в коді)
 
-## Support
+**Розширений набір (для високої оцінки):**
 
-For issues or questions:
-1. Check the main README.md
-2. Review backend/README.md and frontend/README.md
-3. Check the code comments in each file
-4. Review the example_usage.py for programmatic usage
+6. ✅ Аблаційні дослідження (вплив гіперпараметрів)
+7. ✅ Візуалізація attention weights (для GNN)
+8. ✅ Аналіз помилок (які пазли складні?)
+9. ✅ Порівняння з класичними алгоритмами (backtracking)
+10. ✅ Timing benchmarks (швидкість кожної моделі)
 
-Happy Sudoku Solving! 🎓
+---
 
+**Готово! Тепер ви можете працювати з проектом! 🚀**
+
+**Питання? Дивіться [README.md](README.md) для детальної інформації.**

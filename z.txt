@@ -137,44 +137,297 @@ python train.py --model advanced --epochs 1 --batch-size 64 --limit 10000
 # 3. Тренуємо GNN (повільніше)
 python train.py --model gnn --epochs 1 --batch-size 64 --limit 10000
 
-Без паніки\! Це стандартна ситуація. Тобі потрібно відкрити **два окремих термінали** (або дві вкладки в терміналі редактора).
 
-Ось покрокова інструкція для Windows (PowerShell), оскільки я бачив твої шляхи до файлів раніше:
-
-### Термінал 1: Запуск Бекенду (Python/FastAPI)
-
-Тут живуть твої нейромережі.
-
-1.  Зайди в папку бекенду:
-    ```powershell
     cd backend
-    ```
-2.  Активуй віртуальне середовище (з'явиться напис `(venv)`):
-    ```powershell
+
     .\venv\Scripts\activate
-    ```
-3.  Запусти сервер:
-    ```powershell
+
     python main.py
-    ```
-    *Має написати: `Uvicorn running on http://0.0.0.0:8000`*
 
------
 
-### Термінал 2: Запуск Фронтенду (Next.js)
 
-Тут живе твій сайт.
-
-1.  Зайди в папку фронтенду:
-    ```powershell
     cd frontend
-    ```
-2.  Запусти режим розробника:
-    ```powershell
+
     npm run dev
-    ```
-    *Має написати: `Ready in ... http://localhost:3000`*
+
 
 -----
 
 Після цього просто відкрий браузер на **[http://localhost:3000](https://www.google.com/search?q=http://localhost:3000)**. Все має працювати як раніше\!
+
+
+Working directory: /content/drive/MyDrive/diplom/backend
+✅ File models/gnn_model.py updated with fix!
+============================================================
+Sudoku Neural Network Training
+============================================================
+Model: gnn
+Device: cuda
+Batch size: 64
+============================================================
+
+Loading datasets...
+Loading data from data/sudoku.csv...
+Loaded training dataset with 800000 samples
+Loading data from data/sudoku.csv...
+Loaded validation dataset with 200000 samples
+
+Initializing model...
+Model parameters: 270,729
+
+Starting training...
+
+Epoch 1/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:55<00:00,  9.96it/s, loss=0.1148, cell_acc=0.9518, board_acc=0.5156]
+Validation: 100% 3125/3125 [02:27<00:00, 21.25it/s, loss=0.0655, cell_acc=0.9703, board_acc=0.5781]
+
+Train Loss: 0.1234 | Cell Acc: 0.9479 | Board Acc: 0.4073
+Val Loss: 0.0734 | Cell Acc: 0.9689 | Board Acc: 0.5675
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 2/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:55<00:00,  9.95it/s, loss=0.0540, cell_acc=0.9770, board_acc=0.7031]
+Validation: 100% 3125/3125 [02:27<00:00, 21.25it/s, loss=0.0571, cell_acc=0.9755, board_acc=0.6719]
+
+Train Loss: 0.0778 | Cell Acc: 0.9674 | Board Acc: 0.5620
+Val Loss: 0.0613 | Cell Acc: 0.9742 | Board Acc: 0.6309
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 3/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:55<00:00,  9.96it/s, loss=0.0547, cell_acc=0.9765, board_acc=0.6719]
+Validation: 100% 3125/3125 [02:26<00:00, 21.26it/s, loss=0.0486, cell_acc=0.9788, board_acc=0.6875]
+
+Train Loss: 0.0700 | Cell Acc: 0.9708 | Board Acc: 0.5995
+Val Loss: 0.0553 | Cell Acc: 0.9767 | Board Acc: 0.6624
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 4/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:54<00:00,  9.96it/s, loss=0.0527, cell_acc=0.9770, board_acc=0.6406]
+Validation: 100% 3125/3125 [02:26<00:00, 21.29it/s, loss=0.0477, cell_acc=0.9784, board_acc=0.7812]
+
+Train Loss: 0.0658 | Cell Acc: 0.9726 | Board Acc: 0.6220
+Val Loss: 0.0514 | Cell Acc: 0.9785 | Board Acc: 0.6890
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 5/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:54<00:00,  9.96it/s, loss=0.0572, cell_acc=0.9765, board_acc=0.6719]
+Validation: 100% 3125/3125 [02:26<00:00, 21.27it/s, loss=0.0442, cell_acc=0.9801, board_acc=0.7812]
+
+Train Loss: 0.0625 | Cell Acc: 0.9741 | Board Acc: 0.6407
+Val Loss: 0.0495 | Cell Acc: 0.9794 | Board Acc: 0.7035
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 6/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:54<00:00,  9.96it/s, loss=0.0610, cell_acc=0.9770, board_acc=0.6406]
+Validation: 100% 3125/3125 [02:26<00:00, 21.27it/s, loss=0.0465, cell_acc=0.9780, board_acc=0.7344]
+
+Train Loss: 0.0604 | Cell Acc: 0.9750 | Board Acc: 0.6535
+Val Loss: 0.0494 | Cell Acc: 0.9795 | Board Acc: 0.7018
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 7/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:54<00:00,  9.97it/s, loss=0.0523, cell_acc=0.9786, board_acc=0.6875]
+Validation: 100% 3125/3125 [02:27<00:00, 21.25it/s, loss=0.0416, cell_acc=0.9813, board_acc=0.8125]
+
+Train Loss: 0.0592 | Cell Acc: 0.9756 | Board Acc: 0.6602
+Val Loss: 0.0478 | Cell Acc: 0.9802 | Board Acc: 0.7137
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 8/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:53<00:00,  9.97it/s, loss=0.0734, cell_acc=0.9703, board_acc=0.6406]
+Validation: 100% 3125/3125 [02:26<00:00, 21.28it/s, loss=0.0453, cell_acc=0.9796, board_acc=0.7969]
+
+Train Loss: 0.0582 | Cell Acc: 0.9760 | Board Acc: 0.6651
+Val Loss: 0.0477 | Cell Acc: 0.9803 | Board Acc: 0.7105
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 9/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:53<00:00,  9.97it/s, loss=0.0537, cell_acc=0.9770, board_acc=0.6719]
+Validation: 100% 3125/3125 [02:26<00:00, 21.31it/s, loss=0.0409, cell_acc=0.9811, board_acc=0.8281]
+
+Train Loss: 0.0575 | Cell Acc: 0.9763 | Board Acc: 0.6692
+Val Loss: 0.0450 | Cell Acc: 0.9813 | Board Acc: 0.7283
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 10/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:54<00:00,  9.97it/s, loss=0.0565, cell_acc=0.9772, board_acc=0.7031]
+Validation: 100% 3125/3125 [02:26<00:00, 21.29it/s, loss=0.0393, cell_acc=0.9826, board_acc=0.7969]
+
+Train Loss: 0.0568 | Cell Acc: 0.9766 | Board Acc: 0.6734
+Val Loss: 0.0448 | Cell Acc: 0.9814 | Board Acc: 0.7281
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 11/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:53<00:00,  9.97it/s, loss=0.0722, cell_acc=0.9686, board_acc=0.5625]
+Validation: 100% 3125/3125 [02:26<00:00, 21.30it/s, loss=0.0421, cell_acc=0.9826, board_acc=0.7969]
+
+Train Loss: 0.0561 | Cell Acc: 0.9769 | Board Acc: 0.6761
+Val Loss: 0.0474 | Cell Acc: 0.9807 | Board Acc: 0.7167
+
+Epoch 12/20
+------------------------------------------------------------
+Training: 100% 12500/12500 [20:52<00:00,  9.98it/s, loss=0.0768, cell_acc=0.9688, board_acc=0.5781]
+Validation: 100% 3125/3125 [02:26<00:00, 21.29it/s, loss=0.0414, cell_acc=0.9832, board_acc=0.8438]
+
+Train Loss: 0.0557 | Cell Acc: 0.9771 | Board Acc: 0.6789
+Val Loss: 0.0443 | Cell Acc: 0.9817 | Board Acc: 0.7321
+
+✓ Saved best model to weights/gnn_best.pth
+
+Epoch 13/20
+------------------------------------------------------------
+Training:  53% 6594/12500 [11:00<09:48, 10.03it/s, loss=0.0485, cell_acc=0.9788, board_acc=0.6562]
+
+
+Working directory: /content/drive/MyDrive/diplom/backend
+
+============================================================
+🚀 Запуск тренування RNN (LSTM) моделі
+============================================================
+
+============================================================
+Sudoku Neural Network Training
+============================================================
+Model: rnn
+Device: cuda
+Batch size: 64
+============================================================
+
+Loading datasets...
+Loading data from data/sudoku.csv...
+Loaded training dataset with 800000 samples
+Loading data from data/sudoku.csv...
+Loaded validation dataset with 200000 samples
+
+Initializing model...
+Model parameters: 596,873
+
+⭐ Starting fresh training
+
+Starting training...
+
+Epoch 1/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:51<00:00, 72.84it/s, loss=0.5873, cell_acc=0.7184, board_acc=0.0000]
+Validation: 100% 3125/3125 [00:22<00:00, 138.37it/s, loss=0.5879, cell_acc=0.7141, board_acc=0.0000]
+
+Train Loss: 0.6579 | Cell Acc: 0.6934 | Board Acc: 0.0001
+Val Loss: 0.5758 | Cell Acc: 0.7203 | Board Acc: 0.0001
+
+✓ Saved best model to weights/rnn_best.pth
+
+Epoch 2/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:53<00:00, 71.85it/s, loss=0.5590, cell_acc=0.7286, board_acc=0.0000]
+Validation: 100% 3125/3125 [00:22<00:00, 138.42it/s, loss=0.5619, cell_acc=0.7267, board_acc=0.0000]
+
+Train Loss: 0.5715 | Cell Acc: 0.7227 | Board Acc: 0.0001
+Val Loss: 0.5504 | Cell Acc: 0.7312 | Board Acc: 0.0002
+
+✓ Saved best model to weights/rnn_best.pth
+
+Epoch 3/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:54<00:00, 71.52it/s, loss=0.5503, cell_acc=0.7332, board_acc=0.0000]
+Validation: 100% 3125/3125 [00:22<00:00, 138.17it/s, loss=0.5552, cell_acc=0.7338, board_acc=0.0000]
+
+Train Loss: 0.5563 | Cell Acc: 0.7294 | Board Acc: 0.0001
+Val Loss: 0.5442 | Cell Acc: 0.7336 | Board Acc: 0.0002
+
+✓ Saved best model to weights/rnn_best.pth
+
+Epoch 4/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:54<00:00, 71.55it/s, loss=0.5380, cell_acc=0.7344, board_acc=0.0000]
+Validation: 100% 3125/3125 [00:22<00:00, 138.15it/s, loss=0.5547, cell_acc=0.7290, board_acc=0.0156]
+
+Train Loss: 0.5510 | Cell Acc: 0.7318 | Board Acc: 0.0002
+Val Loss: 0.5397 | Cell Acc: 0.7367 | Board Acc: 0.0002
+
+✓ Saved best model to weights/rnn_best.pth
+
+Epoch 5/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:54<00:00, 71.53it/s, loss=0.5719, cell_acc=0.7257, board_acc=0.0000]
+Validation: 100% 3125/3125 [00:22<00:00, 138.20it/s, loss=0.5377, cell_acc=0.7398, board_acc=0.0000]
+
+Train Loss: 0.5397 | Cell Acc: 0.7377 | Board Acc: 0.0002
+Val Loss: 0.5253 | Cell Acc: 0.7442 | Board Acc: 0.0003
+
+✓ Saved best model to weights/rnn_best.pth
+
+Epoch 6/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:54<00:00, 71.56it/s, loss=0.5343, cell_acc=0.7402, board_acc=0.0000]
+Validation: 100% 3125/3125 [00:22<00:00, 138.62it/s, loss=0.5252, cell_acc=0.7510, board_acc=0.0000]
+
+Train Loss: 0.5266 | Cell Acc: 0.7457 | Board Acc: 0.0003
+Val Loss: 0.5090 | Cell Acc: 0.7538 | Board Acc: 0.0004
+
+✓ Saved best model to weights/rnn_best.pth
+
+Epoch 7/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:53<00:00, 71.97it/s, loss=0.5220, cell_acc=0.7527, board_acc=0.0000]
+Validation: 100% 3125/3125 [00:22<00:00, 138.64it/s, loss=0.5097, cell_acc=0.7539, board_acc=0.0000]
+
+Train Loss: 0.5107 | Cell Acc: 0.7548 | Board Acc: 0.0004
+Val Loss: 0.4940 | Cell Acc: 0.7621 | Board Acc: 0.0005
+
+✓ Saved best model to weights/rnn_best.pth
+
+Epoch 8/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:53<00:00, 71.98it/s, loss=0.4967, cell_acc=0.7652, board_acc=0.0000]
+Validation: 100% 3125/3125 [00:22<00:00, 138.79it/s, loss=0.4965, cell_acc=0.7608, board_acc=0.0000]
+
+Train Loss: 0.4992 | Cell Acc: 0.7607 | Board Acc: 0.0006
+Val Loss: 0.4827 | Cell Acc: 0.7680 | Board Acc: 0.0007
+
+✓ Saved best model to weights/rnn_best.pth
+
+Epoch 9/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:54<00:00, 71.82it/s, loss=0.5038, cell_acc=0.7660, board_acc=0.0156]
+Validation: 100% 3125/3125 [00:22<00:00, 137.76it/s, loss=0.4826, cell_acc=0.7652, board_acc=0.0000]
+
+Train Loss: 0.4891 | Cell Acc: 0.7661 | Board Acc: 0.0007
+Val Loss: 0.4717 | Cell Acc: 0.7736 | Board Acc: 0.0008
+
+✓ Saved best model to weights/rnn_best.pth
+
+Epoch 10/10
+------------------------------------------------------------
+Training: 100% 12500/12500 [02:54<00:00, 71.79it/s, loss=0.4514, cell_acc=0.7878, board_acc=0.0000]
+Validation: 100% 3125/3125 [00:22<00:00, 138.27it/s, loss=0.4764, cell_acc=0.7703, board_acc=0.0000]
+
+Train Loss: 0.4810 | Cell Acc: 0.7702 | Board Acc: 0.0007
+Val Loss: 0.4632 | Cell Acc: 0.7782 | Board Acc: 0.0010
+
+✓ Saved best model to weights/rnn_best.pth
+
+============================================================
+Training completed!
+Best validation loss: 0.4632
+============================================================

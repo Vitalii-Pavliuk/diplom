@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, Trash2, Shuffle, Download, Upload } from 'lucide-react';
+import { Sparkles, Trash2, Shuffle, Download, Upload, CheckCheck } from 'lucide-react';
 
 interface ControlsProps {
   onSolve: () => void;
@@ -10,32 +10,34 @@ interface ControlsProps {
   onExport?: () => void;
   onImport?: () => void;
   isLoading?: boolean;
+  
+  // Модель
   currentModel?: string;
   onModelChange?: (model: string) => void;
   availableModels?: string[];
+  
+  // Складність
   difficulty: string;
   onDifficultyChange: (diff: string) => void;
-  // НОВІ ПРОПСИ
+  
+  // Метрики
   confidence: number | null;
   realAccuracy: number | null;
+  
+  // Перевірка
+  onCheckAccuracy: () => void;
+  isVerifying: boolean;
 }
 
 export default function Controls({
-  onSolve,
-  onClear,
-  onRandom,
-  onExport,
-  onImport,
+  onSolve, onClear, onRandom, onExport, onImport,
   isLoading = false,
-  currentModel = 'baseline',
-  onModelChange,
-  availableModels = ['baseline', 'advanced', 'gnn'],
-  difficulty,
-  onDifficultyChange,
-  // Деструктуризація
-  confidence,
-  realAccuracy,
+  currentModel = 'baseline', onModelChange, availableModels = ['baseline', 'advanced', 'gnn', 'rnn'],
+  difficulty, onDifficultyChange,
+  confidence, realAccuracy,
+  onCheckAccuracy, isVerifying
 }: ControlsProps) {
+  
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
       <h2 className="text-xl font-bold text-gray-800 border-b pb-2">Control Panel</h2>
@@ -43,13 +45,11 @@ export default function Controls({
       {/* 1. Вибір Моделі */}
       {onModelChange && (
         <div className="space-y-2">
-          <label className="block text-sm font-bold text-gray-700">
-            Neural Architecture
-          </label>
+          <label className="block text-sm font-bold text-gray-700">Neural Architecture</label>
           <select
             value={currentModel}
             onChange={(e) => onModelChange(e.target.value)}
-            disabled={isLoading}
+            disabled={isLoading || isVerifying}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 bg-gray-50"
           >
             {availableModels.map((model) => (
@@ -57,22 +57,21 @@ export default function Controls({
                 {model === 'baseline' && '⚡ CNN Baseline (Fast)'}
                 {model === 'advanced' && '🧠 CNN Advanced (ResNet)'}
                 {model === 'gnn' && '🕸️ GNN (Graph Network)'}
+                {model === 'rnn' && '🔄 RNN (LSTM Sequence)'}
               </option>
             ))}
           </select>
         </div>
       )}
 
-      {/* 2. Генерація Пазлів */}
+      {/* 2. Генерація */}
       <div className="space-y-2 pt-2">
-        <label className="block text-sm font-bold text-gray-700">
-          Puzzle Generation
-        </label>
+        <label className="block text-sm font-bold text-gray-700">Puzzle Generation</label>
         <div className="flex gap-2">
           <select
             value={difficulty}
             onChange={(e) => onDifficultyChange(e.target.value)}
-            disabled={isLoading}
+            disabled={isLoading || isVerifying}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50"
           >
             <option value="easypeasy">Easy-peasy</option>
@@ -81,10 +80,9 @@ export default function Controls({
             <option value="hard">Hard</option>
             <option value="impossible">🔥 Impossible</option>
           </select>
-          
           <button
             onClick={onRandom}
-            disabled={isLoading}
+            disabled={isLoading || isVerifying}
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
           >
             <Shuffle size={18} /> Generate
@@ -96,28 +94,38 @@ export default function Controls({
       <div className="space-y-3 pt-2">
         <button
           onClick={onSolve}
-          disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white font-bold text-lg rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+          disabled={isLoading || isVerifying}
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white font-bold text-lg rounded-xl hover:bg-blue-700 shadow-md transition-all disabled:opacity-50"
         >
           <Sparkles size={24} />
           {isLoading ? 'Solving...' : 'SOLVE PUZZLE'}
         </button>
         
-        <button
-          onClick={onClear}
-          disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 px-6 py-2 bg-gray-100 text-gray-600 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
-        >
-          <Trash2 size={18} />
-          Clear Board
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+            <button
+            onClick={onClear}
+            disabled={isLoading || isVerifying}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+            >
+            <Trash2 size={18} /> Clear
+            </button>
+
+            <button
+            onClick={onCheckAccuracy}
+            disabled={isLoading || isVerifying}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 font-semibold rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50"
+            >
+            <CheckCheck size={18} />
+            {isVerifying ? 'Checking...' : 'Verify'}
+            </button>
+        </div>
       </div>
 
-      {/* --- 4. ВІЗУАЛІЗАЦІЯ МЕТРИК (НОВЕ) --- */}
+      {/* 4. Метрики */}
       {(confidence !== null || realAccuracy !== null) && (
         <div className="pt-4 border-t border-gray-100 space-y-4">
             
-            {/* Графік Впевненості */}
+            {/* Confidence */}
             {confidence !== null && (
             <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
                 <div className="flex justify-between items-end mb-1">
@@ -133,7 +141,7 @@ export default function Controls({
             </div>
             )}
 
-            {/* Графік Реальної Точності */}
+            {/* Accuracy */}
             {realAccuracy !== null && (
             <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
                 <div className="flex justify-between items-end mb-1">
@@ -152,7 +160,7 @@ export default function Controls({
                 </div>
                 {realAccuracy < 1 && (
                     <p className="text-[10px] text-red-500 mt-1 font-medium text-center">
-                        ⚠️ Mistakes found vs Ground Truth
+                         Mistakes found vs Ground Truth
                     </p>
                 )}
             </div>
@@ -160,7 +168,7 @@ export default function Controls({
         </div>
       )}
       
-      {/* 5. Import/Export */}
+      {/* 5. Імпорт/Експорт */}
       {(onExport || onImport) && (
         <div className="pt-4 border-t border-gray-200 grid grid-cols-2 gap-2">
             {onImport && (

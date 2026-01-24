@@ -1,339 +1,1154 @@
-# Thesis Project: Effectiveness Analysis of Various Neural Network Architectures for Sudoku Solving
+# 🧠 NeuroSudoku: Comparative Analysis of Neural Network Architectures for Sudoku Solving
 
-A comprehensive full-stack application that implements and compares three different neural network architectures for solving Sudoku puzzles.
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
+[![License](https://img.shields.io/badge/License-Educational-green.svg)]()
 
-## 🎯 Project Overview
-
-This thesis project implements and analyzes the effectiveness of three neural network architectures:
-
-1. **CNN Baseline** - Simple Convolutional Neural Network
-2. **CNN Advanced** - Deep Residual Network (ResNet-style)
-3. **Graph Neural Network (GNN)** - Graph-based approach using PyTorch Geometric
-
-## 🏗️ Architecture
-
-### Backend (Python)
-- **Framework**: FastAPI
-- **Deep Learning**: PyTorch, PyTorch Geometric
-- **Data Processing**: Pandas, NumPy
-- **API**: RESTful API with CORS support
-
-### Frontend (Next.js)
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: TailwindCSS
-- **UI**: Modern, academic-style interface
-
-## 📁 Project Structure
-
-```
-sudoku-thesis/
-├── backend/
-│   ├── data/                   # Dataset directory
-│   ├── models/                 # Neural network architectures
-│   │   ├── __init__.py
-│   │   ├── cnn_baseline.py    # Model A: Baseline CNN
-│   │   ├── cnn_advanced.py    # Model B: Advanced CNN (ResNet)
-│   │   └── gnn_model.py       # Model C: Graph Neural Network
-│   ├── dataset.py             # Data loading logic
-│   ├── train.py               # Training script
-│   ├── main.py                # FastAPI backend
-│   └── requirements.txt       # Python dependencies
-├── frontend/
-│   ├── app/
-│   │   ├── layout.tsx
-│   │   ├── page.tsx           # Main application page
-│   │   └── globals.css
-│   ├── components/
-│   │   ├── SudokuBoard.tsx    # Interactive Sudoku board
-│   │   └── Controls.tsx       # Control panel
-│   ├── lib/
-│   │   └── api.ts             # API client
-│   ├── package.json
-│   └── tsconfig.json
-└── README.md
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Python 3.9+
-- Node.js 18+
-- CUDA-capable GPU (optional, for faster training)
-
-### Backend Setup
-
-1. **Create a virtual environment**:
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-2. **Install dependencies**:
-```bash
-pip install -r requirements.txt
-```
-
-3. **Download the dataset**:
-   - Download the "1 million Sudoku games" dataset
-   - Place the CSV file in `backend/data/sudoku.csv`
-   - Expected format: CSV with columns `quizzes` and `solutions`
-   - Each entry is a string of 81 digits (0 for empty cells)
-
-4. **Train a model** (optional):
-```bash
-# Train baseline CNN
-python train.py --model baseline --epochs 20 --batch-size 64
-
-# Train advanced CNN
-python train.py --model advanced --epochs 20 --batch-size 64
-
-# Train GNN
-python train.py --model gnn --epochs 20 --batch-size 32
-```
-
-5. **Start the API server**:
-```bash
-python main.py
-```
-
-The API will be available at `http://localhost:8000`
-
-### Frontend Setup
-
-1. **Install dependencies**:
-```bash
-cd frontend
-npm install
-```
-
-2. **Create environment file**:
-```bash
-cp .env.local.example .env.local
-```
-
-Edit `.env.local` if your backend is running on a different URL.
-
-3. **Start the development server**:
-```bash
-npm run dev
-```
-
-The frontend will be available at `http://localhost:3000`
-
-## 🔬 Model Architectures
-
-### 1. CNN Baseline (`cnn_baseline.py`)
-
-A simple convolutional neural network that maintains spatial dimensions throughout:
-
-- **Input**: (Batch, 9, 9) with values 0-9
-- **Architecture**:
-  - One-hot encoding (10 channels)
-  - 5 convolutional layers with BatchNorm and ReLU
-  - Maintains 9×9 spatial dimensions
-  - Output layer projects to 9 classes per cell
-- **Output**: (Batch, 9, 9, 9) logits
-- **Parameters**: ~60K
-
-### 2. CNN Advanced (`cnn_advanced.py`)
-
-Deep residual network with skip connections:
-
-- **Input**: (Batch, 9, 9) with values 0-9
-- **Architecture**:
-  - One-hot encoding (10 channels)
-  - Initial convolution to expand channels
-  - 20 residual blocks with skip connections
-  - Prevents vanishing gradients
-  - Output layer projects to 9 classes per cell
-- **Output**: (Batch, 9, 9, 9) logits
-- **Parameters**: ~500K
-
-### 3. Graph Neural Network (`gnn_model.py`)
-
-Graph-based approach treating each Sudoku cell as a node:
-
-- **Graph Structure**:
-  - 81 nodes (one per cell)
-  - Edges connect cells in the same row, column, or 3×3 box
-- **Architecture**:
-  - Node features: One-hot encoding of digit
-  - 6 GCN/GAT layers
-  - Message passing between related cells
-  - Output: 9-class prediction per node
-- **Output**: (Batch, 9, 9, 9) logits
-- **Parameters**: ~300K
-
-## 📊 Training
-
-### Training Command Examples
-
-```bash
-# Baseline CNN with default parameters
-python train.py --model baseline --data data/sudoku.csv --epochs 20
-
-# Advanced CNN with more parameters
-python train.py --model advanced --hidden-channels 128 --num-residual-blocks 20 --epochs 30
-
-# GNN with Graph Attention
-python train.py --model gnn --num-gnn-layers 6 --use-gat --epochs 25
-
-# Training on GPU with larger batch size
-python train.py --model baseline --device cuda --batch-size 128 --lr 0.001
-```
-
-### Training Parameters
-
-- `--model`: Model architecture (`baseline`, `advanced`, `gnn`)
-- `--data`: Path to CSV dataset
-- `--batch-size`: Batch size (default: 64)
-- `--epochs`: Number of training epochs (default: 20)
-- `--lr`: Learning rate (default: 0.001)
-- `--hidden-channels`: Number of hidden channels (default: 128)
-- `--device`: Device to use (`cuda` or `cpu`)
-
-### Monitoring Training
-
-The training script provides:
-- Real-time progress bars with tqdm
-- Per-epoch metrics (loss, cell accuracy, board accuracy)
-- Automatic model checkpointing
-- Learning rate scheduling
-- Training history saved to JSON
-
-## 🌐 API Endpoints
-
-### `POST /solve`
-Solve a Sudoku puzzle.
-
-**Request**:
-```json
-{
-  "board": [[0,0,0,2,6,0,7,0,1], ...]
-}
-```
-
-**Response**:
-```json
-{
-  "solution": [[4,3,5,2,6,9,7,8,1], ...],
-  "model_used": "baseline",
-  "confidence": 0.95
-}
-```
-
-### `GET /model`
-Get current model information.
-
-### `POST /model/switch?model_name=advanced`
-Switch to a different model.
-
-### `GET /health`
-Health check endpoint.
-
-## 🎨 Frontend Features
-
-- **Interactive Sudoku Board**: Click and type to enter numbers
-- **Visual Distinction**: User inputs (black) vs AI solutions (blue)
-- **Model Selection**: Switch between three neural network models
-- **Confidence Display**: See the model's confidence in its solution
-- **Import/Export**: Save and load boards as JSON
-- **Random Puzzles**: Generate random sample puzzles
-- **Responsive Design**: Clean, academic-style interface
-- **Real-time API Status**: Connection indicator
-
-## 📈 Performance Metrics
-
-The training script tracks:
-- **Cell Accuracy**: Percentage of correctly predicted cells
-- **Empty Cell Accuracy**: Accuracy on initially empty cells only
-- **Board Accuracy**: Percentage of completely solved puzzles
-- **Confidence**: Average prediction confidence
-
-## 🔧 Development
-
-### Running Tests
-
-Backend models can be tested individually:
-```bash
-python -m models.cnn_baseline
-python -m models.cnn_advanced
-python -m models.gnn_model
-```
-
-### Dataset Testing
-```bash
-python dataset.py
-```
-
-### API Testing
-```bash
-# Start the server
-python main.py
-
-# In another terminal
-curl -X POST "http://localhost:8000/solve" \
-  -H "Content-Type: application/json" \
-  -d '{"board": [[0,0,0,2,6,0,7,0,1], ...]}'
-```
-
-## 📝 Dataset Format
-
-The project uses the "1 million Sudoku games" dataset:
-
-- **Format**: CSV with columns `quizzes` and `solutions`
-- **Quiz**: String of 81 digits (0 = empty cell)
-- **Solution**: String of 81 digits (complete solution)
-- **Example**:
-  ```
-  Quiz: "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
-  Solution: "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
-  ```
-
-You can download this dataset from Kaggle or similar sources.
-
-## 🎓 Thesis Components
-
-This project is suitable for analyzing:
-
-1. **Model Comparison**: Compare three different architectures
-2. **Performance Analysis**: Accuracy, speed, model size
-3. **Architecture Benefits**: Why GNN might outperform CNN
-4. **Visualization**: Training curves, confusion matrices
-5. **Ablation Studies**: Effect of hyperparameters
-
-## 🛠️ Technologies Used
-
-### Backend
-- PyTorch 2.0+
-- PyTorch Geometric
-- FastAPI
-- Uvicorn
-- Pandas & NumPy
-
-### Frontend
-- Next.js 14
-- TypeScript
-- TailwindCSS
-- Axios
-- Lucide Icons
-
-## 📄 License
-
-This is a thesis project for educational purposes.
-
-## 🤝 Contributing
-
-This is a thesis project, but suggestions and improvements are welcome!
-
-## 📧 Contact
-
-For questions about this thesis project, please contact the repository owner.
+Дипломний проект, присвячений порівняльному аналізу ефективності різних архітектур нейронних мереж для розв'язування судоку. Проект включає в себе повнофункціональний веб-застосунок з backend на FastAPI та frontend на Next.js.
 
 ---
 
-**Note**: Make sure to download the Sudoku dataset and place it in `backend/data/sudoku.csv` before training models.
+## 📋 Зміст
+
+- [Огляд проекту](#-огляд-проекту)
+- [Архітектура системи](#-архітектура-системи)
+- [Структура проекту](#-структура-проекту)
+- [Швидкий старт](#-швидкий-старт)
+- [Архітектури моделей](#-архітектури-моделей)
+- [Процес навчання](#-процес-навчання)
+- [API документація](#-api-документація)
+- [Frontend функціонал](#-frontend-функціонал)
+- [Результати експериментів](#-результати-експериментів)
+- [Технології](#-технології)
+
+## 📖 Додаткова документація
+
+- **[QUICKSTART.md](QUICKSTART.md)** - ⚡ Швидкий запуск за 5 хвилин
+- **[MODELS_EXPLAINED.md](MODELS_EXPLAINED.md)** - 🧠 Детальне пояснення архітектур з візуалізаціями
+- **[backend/README.md](backend/README.md)** - 🔧 Backend документація та API
+
+---
+
+## 🎯 Огляд проекту
+
+Цей дипломний проект реалізує та порівнює **4 різні архітектури нейронних мереж** для розв'язування судоку:
+
+1. **CNN Baseline** - Проста згорткова нейронна мережа (базова лінія)
+2. **CNN Advanced** - Глибока ResNet-подібна архітектура з skip connections
+3. **Graph Neural Network (GNN)** - Графова нейронна мережа з GAT шарами
+4. **RNN (LSTM)** - Рекурентна мережа з двонаправленим LSTM
+
+### Ключові особливості
+
+✅ **4 різні архітектури** для порівняльного аналізу  
+✅ **Full-stack застосунок** з сучасним UI  
+✅ **REST API** для інтеграції з іншими системами  
+✅ **Детальні метрики** (accuracy, confidence, board accuracy)  
+✅ **Перевірка рішень** через класичний алгоритм backtracking  
+✅ **Підтримка GPU** для швидкого навчання  
+✅ **Google Colab** готові ноутбуки для експериментів  
+
+---
+
+## 🏗️ Архітектура системи
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      WEB INTERFACE                          │
+│              (Next.js + TypeScript + Tailwind)              │
+└────────────────────────┬────────────────────────────────────┘
+                         │ HTTP REST API
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    FASTAPI BACKEND                          │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              Model Management Service                 │   │
+│  │  • Load/Switch Models  • Inference  • Metrics        │   │
+│  └──────────────────────────────────────────────────────┘   │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  NEURAL NETWORK MODELS                      │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │ CNN Baseline│  │ CNN Advanced│  │     GNN     │         │
+│  │   ~60K      │  │   ~500K     │  │   ~300K     │         │
+│  │  params     │  │   params    │  │   params    │         │
+│  └─────────────┘  └─────────────┘  └─────────────┘         │
+│                    ┌─────────────┐                          │
+│                    │  RNN (LSTM) │                          │
+│                    │   ~200K     │                          │
+│                    │   params    │                          │
+│                    └─────────────┘                          │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     TRAINING PIPELINE                       │
+│  • Dataset Loading  • Augmentation  • Training Loop        │
+│  • Validation  • Checkpointing  • Metrics Tracking         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📁 Структура проекту
+
+```
+diplom/
+├── backend/                        # Python backend
+│   ├── models/                     # Архітектури нейронних мереж
+│   │   ├── __init__.py            # Експорт моделей
+│   │   ├── cnn_baseline.py        # 🔷 Модель A: Baseline CNN
+│   │   ├── cnn_advanced.py        # 🔷 Модель B: Advanced CNN (ResNet)
+│   │   ├── gnn_model.py           # 🔷 Модель C: Graph Neural Network
+│   │   └── rnn_model.py           # 🔷 Модель D: RNN (LSTM)
+│   │
+│   ├── data/                       # Датасет (не в git)
+│   │   └── sudoku.csv             # 1M+ судоку пазлів
+│   │
+│   ├── weights/                    # Збережені моделі (не в git)
+│   │   ├── baseline_best.pth
+│   │   ├── advanced_best.pth
+│   │   ├── gnn_best.pth
+│   │   └── rnn_best.pth
+│   │
+│   ├── dataset.py                  # 📊 Завантаження та обробка даних
+│   ├── train.py                    # 🎓 Головний скрипт навчання
+│   ├── main.py                     # 🚀 FastAPI server
+│   ├── example_usage.py            # 📝 Приклади використання
+│   ├── colab_example.ipynb         # 📓 Google Colab ноутбук
+│   ├── requirements.txt            # Python залежності
+│   └── README.md                   # Backend документація
+│
+├── frontend/                       # Next.js frontend
+│   ├── app/                        # Next.js 14 App Router
+│   │   ├── page.tsx               # 🏠 Головна сторінка
+│   │   ├── layout.tsx             # Layout wrapper
+│   │   └── globals.css            # Глобальні стилі
+│   │
+│   ├── components/                 # React компоненти
+│   │   ├── SudokuBoard.tsx        # 🎮 Інтерактивна дошка судоку
+│   │   └── Controls.tsx           # 🎛️ Панель управління
+│   │
+│   ├── lib/                        # Утиліти
+│   │   ├── api.ts                 # 🔌 API клієнт
+│   │   └── sudokuLogic.ts         # 🧮 Класичний solver
+│   │
+│   ├── package.json                # Node.js залежності
+│   ├── tsconfig.json               # TypeScript конфігурація
+│   └── tailwind.config.js          # Tailwind CSS конфігурація
+│
+├── start_backend.bat/sh            # 🚀 Скрипти запуску backend
+├── start_frontend.bat/sh           # 🚀 Скрипти запуску frontend
+├── .gitignore                      # Git ignore правила
+└── README.md                       # 📖 Ця документація
+```
+
+---
+
+## 🚀 Швидкий старт
+
+> ⚡ **Хочете запустити швидко?** Дивіться [QUICKSTART.md](QUICKSTART.md) для покрокової інструкції за 5 хвилин!
+
+### Передумови
+
+- **Python** 3.9 або вище
+- **Node.js** 18 або вище
+- **CUDA** (опційно, для GPU прискорення)
+- **8GB+ RAM** (для тренування моделей)
+
+### 1️⃣ Клонування репозиторію
+
+```bash
+git clone <repository-url>
+cd diplom
+```
+
+### 2️⃣ Налаштування Backend
+
+```bash
+cd backend
+
+# Створити віртуальне середовище
+python -m venv venv
+
+# Активувати (Windows)
+venv\Scripts\activate
+
+# Активувати (Linux/Mac)
+source venv/bin/activate
+
+# Встановити залежності
+pip install -r requirements.txt
+```
+
+**Завантажити датасет:**
+
+1. Завантажте "1 million Sudoku games" датасет з Kaggle
+2. Помістіть CSV файл в `backend/data/sudoku.csv`
+3. Формат: CSV з колонками `puzzle` та `solution` (або `quizzes` та `solutions`)
+4. Кожен рядок містить 81 цифру (0 = порожня клітина)
+
+### 3️⃣ Тренування моделей (опційно)
+
+```bash
+# Baseline CNN (швидко, ~10 хвилин на CPU)
+python train.py --model baseline --epochs 20 --batch-size 64
+
+# Advanced CNN (середньо, ~30 хвилин на CPU)
+python train.py --model advanced --epochs 20 --batch-size 64
+
+# GNN (повільно, ~1 година на CPU)
+python train.py --model gnn --epochs 20 --batch-size 32
+
+# RNN (швидко, ~15 хвилин на CPU)
+python train.py --model rnn --epochs 20 --batch-size 64
+```
+
+**З GPU:**
+```bash
+python train.py --model gnn --device cuda --batch-size 128 --epochs 30
+```
+
+### 4️⃣ Запуск Backend API
+
+```bash
+# Опція 1: Прямий запуск
+python main.py
+
+# Опція 2: Використання скрипту
+# Windows:
+..\start_backend.bat
+
+# Linux/Mac:
+../start_backend.sh
+```
+
+API буде доступний на `http://localhost:8000`
+
+### 5️⃣ Налаштування Frontend
+
+```bash
+cd frontend
+
+# Встановити залежності
+npm install
+
+# Запустити dev сервер
+npm run dev
+
+# Або використати скрипт
+# Windows:
+..\start_frontend.bat
+
+# Linux/Mac:
+../start_frontend.sh
+```
+
+Frontend буде доступний на `http://localhost:3000`
+
+---
+
+## 🧠 Архітектури моделей
+
+### 📊 Порівняльна таблиця
+
+| Модель | Параметри | Швидкість | Складність | Теоретична точність |
+|--------|-----------|-----------|------------|---------------------|
+| **CNN Baseline** | ~60K | ⚡⚡⚡ Дуже швидка | 🟢 Низька | 🟡 Середня |
+| **CNN Advanced** | ~500K | ⚡⚡ Швидка | 🟡 Середня | 🟢 Висока |
+| **GNN** | ~300K | ⚡ Повільна | 🔴 Висока | 🟢 Найвища |
+| **RNN (LSTM)** | ~200K | ⚡⚡ Швидка | 🟡 Середня | 🟡 Середня |
+
+---
+
+> 💡 **Примітка:** Для детального пояснення кожної архітектури з візуалізаціями та формулами, дивіться [MODELS_EXPLAINED.md](MODELS_EXPLAINED.md)
+
+### 🔷 Модель A: CNN Baseline
+
+**Файл:** `backend/models/cnn_baseline.py`
+
+#### Архітектура
+
+```
+Input: (Batch, 9, 9) with values 0-9
+   ↓
+One-Hot Encoding: (Batch, 10, 9, 9)
+   ↓
+Conv2d(10→64, 3×3) + BatchNorm + ReLU
+   ↓
+Conv2d(64→64, 3×3) + BatchNorm + ReLU
+   ↓
+Conv2d(64→64, 3×3) + BatchNorm + ReLU
+   ↓
+Conv2d(64→64, 3×3) + BatchNorm + ReLU
+   ↓
+Conv2d(64→64, 3×3) + BatchNorm + ReLU
+   ↓
+Conv2d(64→9, 1×1) [Output Layer]
+   ↓
+Permute: (Batch, 9, 9, 9)
+   ↓
+Output: 9 class logits per cell
+```
+
+#### Ключові особливості
+
+✅ **Просто та швидко** - найменша кількість параметрів  
+✅ **Зберігає просторові розміри** - 9×9 протягом усієї мережі  
+✅ **BatchNorm** після кожного conv шару для стабільності  
+✅ **Padding=1** для збереження розмірів  
+
+#### Переваги
+
+- Дуже швидке навчання та інференс
+- Мало параметрів - низький ризик оверфітингу
+- Проста та зрозуміла архітектура
+
+#### Недоліки
+
+- Обмежена глибина може не вловити складні залежності
+- Немає skip connections - можливі проблеми з градієнтами
+- Може бути недостатньо потужною для складних судоку
+
+---
+
+### 🔷 Модель B: CNN Advanced (ResNet-style)
+
+**Файл:** `backend/models/cnn_advanced.py`
+
+#### Архітектура
+
+```
+Input: (Batch, 9, 9) with values 0-9
+   ↓
+One-Hot Encoding: (Batch, 10, 9, 9)
+   ↓
+Initial Conv2d(10→128, 3×3) + BatchNorm + ReLU
+   ↓
+┌─────────────────────────────────┐
+│  Residual Block 1               │
+│  ┌─────────────────────┐        │
+│  │ Conv(128→128, 3×3)  │        │
+│  │ BatchNorm + ReLU    │        │
+│  │ Conv(128→128, 3×3)  │────┐   │
+│  │ BatchNorm           │    │   │
+│  └─────────────────────┘    │   │
+│           │                  │   │
+│           └──────────(+)◄────┘   │
+│                      │            │
+│                   ReLU            │
+└───────────────────┬───────────────┘
+                    ↓
+        [× 19 more blocks]
+                    ↓
+Conv2d(128→9, 1×1) [Output Layer]
+   ↓
+Permute: (Batch, 9, 9, 9)
+```
+
+#### Ключові особливості
+
+✅ **Skip Connections** - вирішує проблему vanishing gradients  
+✅ **20 Residual Blocks** - глибока мережа без деградації  
+✅ **Більша ємність** - 128 hidden channels  
+✅ **Стабільне навчання** - завдяки residual з'єднанням  
+
+#### Residual Block (детально)
+
+```python
+def forward(x):
+    identity = x  # Зберігаємо вхід
+    
+    out = relu(bn1(conv1(x)))
+    out = bn2(conv2(out))
+    
+    out = out + identity  # Skip connection
+    out = relu(out)
+    
+    return out
+```
+
+#### Переваги
+
+- Дуже глибока мережа без проблем із градієнтами
+- Висока точність на складних пазлах
+- Швидка конвергенція при навчанні
+
+#### Недоліки
+
+- Більше параметрів = більше часу на навчання
+- Потребує більше пам'яті GPU
+- Можливий оверфітинг на малих датасетах
+
+---
+
+### 🔷 Модель C: Graph Neural Network (GNN)
+
+**Файл:** `backend/models/gnn_model.py`
+
+#### Графова структура Sudoku
+
+Кожна клітина судоку стає **вузлом графа**. Ребра з'єднують клітини, які мають обмеження:
+
+```
+🔵 Node = Sudoku cell (81 nodes total)
+├─ Row constraint: connects to 8 other cells in same row
+├─ Column constraint: connects to 8 other cells in same column
+└─ Box constraint: connects to 8 other cells in same 3×3 box
+
+Total edges per node: 20 (8+8+8 with overlaps removed)
+```
+
+**Приклад графа для однієї клітини:**
+
+```
+┌───┬───┬───┐
+│ 5 │ 3 │🔴│  🔴 connects to all cells in row
+├───┼───┼───┤
+│ 6 │🔵│ 1 │  🔵 = current cell
+├───┼───┼───┤
+│ 9 │ 8 │ 7 │
+└───┴───┴───┘
+```
+
+#### Архітектура
+
+```
+Input: (Batch, 9, 9) with values 0-9
+   ↓
+Flatten: (Batch×81,) node features
+   ↓
+Embedding(10 classes → 128 dim): (Batch×81, 128)
+   ↓
+┌─────────────────────────────────────┐
+│  GAT Layer 1 (4 heads × 32 dim)    │
+│  ↓                                  │
+│  LayerNorm                          │
+│  ↓                                  │
+│  ReLU + Dropout                     │
+│  ↓                                  │
+│  Skip Connection (+)                │
+└────────────┬────────────────────────┘
+             ↓
+    [× 7 more GAT layers]
+             ↓
+Linear(128 → 9) [Classifier]
+   ↓
+Reshape: (Batch, 9, 9, 9)
+```
+
+#### Graph Attention (GAT) механізм
+
+```python
+# Для кожного вузла i та сусіда j:
+attention_score = softmax(LeakyReLU(W·[h_i || h_j]))
+
+# Агрегація з увагою:
+h_i_new = Σ(attention_score_ij × h_j)  for all neighbors j
+```
+
+#### Ключові особливості
+
+✅ **Message Passing** - інформація передається між пов'язаними клітинами  
+✅ **Attention Mechanism** - вчиться, які зв'язки важливіші  
+✅ **Skip Connections** - стабілізує навчання глибокої мережі  
+✅ **LayerNorm** - нормалізація на рівні вузлів  
+
+#### Створення графової структури
+
+```python
+def _create_sudoku_edges(self):
+    edges = []
+    for row in range(9):
+        for col in range(9):
+            src = row * 9 + col
+            
+            # Row edges
+            for k in range(9):
+                if k != col:
+                    edges.append([src, row*9 + k])
+            
+            # Column edges
+            for k in range(9):
+                if k != row:
+                    edges.append([src, k*9 + col])
+            
+            # Box edges (3×3)
+            box_row, box_col = row // 3, col // 3
+            for i in range(box_row*3, (box_row+1)*3):
+                for j in range(box_col*3, (box_col+1)*3):
+                    if i != row or j != col:
+                        edges.append([src, i*9 + j])
+    
+    return edges
+```
+
+#### Переваги
+
+- Природньо моделює правила судоку через граф
+- Attention дозволяє фокусуватися на важливих обмеженнях
+- Теоретично найкраща архітектура для судоку
+- Може узагальнювати на різні розміри судоку
+
+#### Недоліки
+
+- Найповільніша модель (message passing costly)
+- Потребує PyTorch Geometric (додаткова залежність)
+- Складніша у налагодженні
+- Потребує більше епох для конвергенції
+
+---
+
+### 🔷 Модель D: RNN (LSTM)
+
+**Файл:** `backend/models/rnn_model.py`
+
+#### Архітектура
+
+```
+Input: (Batch, 9, 9) with values 0-9
+   ↓
+Flatten: (Batch, 81)
+   ↓
+Embedding(10 → 64): (Batch, 81, 64)
+   ↓
+┌───────────────────────────────────┐
+│  Bidirectional LSTM               │
+│  ┌─────────────────────────┐      │
+│  │  Forward LSTM (64→128)  │──┐   │
+│  └─────────────────────────┘  │   │
+│  ┌─────────────────────────┐  │   │
+│  │ Backward LSTM (64→128)  │──┤   │
+│  └─────────────────────────┘  │   │
+│            ↓                  │   │
+│      Concatenate              │   │
+│     (128 + 128 = 256)         │   │
+└───────────┬───────────────────┘   │
+            ↓                       │
+   [× 2 LSTM layers]                │
+            ↓                       │
+   Dropout(0.1)                     │
+            ↓                       │
+   Linear(256 → 9)                  │
+            ↓                       │
+   Reshape: (Batch, 9, 9, 9)       │
+```
+
+#### Bidirectional LSTM
+
+```
+Position:    0  1  2  3  ... 79 80
+             ↓  ↓  ↓  ↓      ↓  ↓
+Forward:   ──→──→──→──→─ ... ─→──→
+Backward:  ←──←──←──←──← ... ←──←──
+             ↓  ↓  ↓  ↓      ↓  ↓
+Concat:    [h_f + h_b] at each position
+```
+
+#### Ключові особливості
+
+✅ **Sequence Processing** - обробляє судоку як послідовність 81 позиції  
+✅ **Bidirectional** - бачить контекст з обох сторін  
+✅ **2 LSTM Layers** - більша глибина для складних залежностей  
+✅ **Dropout** - регуляризація для запобігання оверфітингу  
+
+#### Переваги
+
+- Може вловлювати послідовні залежності
+- Bidirectional дозволяє бачити всю дошку
+- Менше параметрів ніж Advanced CNN
+- Добре працює на послідовних даних
+
+#### Недоліки
+
+- **Втрачає 2D структуру** судоку (flatten руйнує просторову інформацію)
+- Не моделює явно правила рядків/стовпців/боксів
+- Може бути гірше за CNN для 2D задач
+- Більш схильний до оверфітингу
+
+---
+
+## 🎓 Процес навчання
+
+### Загальна схема тренування
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    TRAINING PIPELINE                         │
+└──────────────────────────────────────────────────────────────┘
+                          ↓
+┌──────────────────────────────────────────────────────────────┐
+│  1. DATASET LOADING                                          │
+│     • Load CSV (1M+ puzzles)                                 │
+│     • Parse strings → numpy arrays                           │
+│     • Split: 80% train, 20% validation                       │
+│     • Convert to PyTorch tensors                             │
+└────────────────────────┬─────────────────────────────────────┘
+                         ↓
+┌──────────────────────────────────────────────────────────────┐
+│  2. DATA PREPROCESSING                                       │
+│     • Input: values 0-9 (0 = empty)                          │
+│     • Target: values 1-9 → subtract 1 → classes 0-8          │
+│     • Batch size: 32-128 depending on model                  │
+│     • DataLoader with shuffle=True                           │
+└────────────────────────┬─────────────────────────────────────┘
+                         ↓
+┌──────────────────────────────────────────────────────────────┐
+│  3. MODEL INITIALIZATION                                     │
+│     • Create model instance                                  │
+│     • Move to device (CPU/CUDA)                              │
+│     • Print model summary                                    │
+└────────────────────────┬─────────────────────────────────────┘
+                         ↓
+┌──────────────────────────────────────────────────────────────┐
+│  4. TRAINING CONFIGURATION                                   │
+│     • Loss: CrossEntropyLoss()                               │
+│     • Optimizer: Adam(lr=0.001, weight_decay=1e-5)           │
+│     • Scheduler: ReduceLROnPlateau(patience=3, factor=0.5)   │
+│     • Gradient Clipping: max_norm=1.0                        │
+└────────────────────────┬─────────────────────────────────────┘
+                         ↓
+┌──────────────────────────────────────────────────────────────┐
+│  5. TRAINING LOOP                                            │
+│     For each epoch:                                          │
+│       ├─ Train on training set                               │
+│       │  ├─ Forward pass                                     │
+│       │  ├─ Compute loss                                     │
+│       │  ├─ Backward pass                                    │
+│       │  ├─ Clip gradients                                   │
+│       │  └─ Optimizer step                                   │
+│       │                                                       │
+│       ├─ Validate on validation set                          │
+│       │  ├─ Forward pass (no grad)                           │
+│       │  ├─ Compute metrics                                  │
+│       │  └─ Track performance                                │
+│       │                                                       │
+│       ├─ Learning rate scheduling                            │
+│       │  └─ Reduce LR if no improvement                      │
+│       │                                                       │
+│       └─ Save checkpoints                                    │
+│          ├─ best_model.pth (best val loss)                   │
+│          └─ last_model.pth (latest state)                    │
+└────────────────────────┬─────────────────────────────────────┘
+                         ↓
+┌──────────────────────────────────────────────────────────────┐
+│  6. METRICS & LOGGING                                        │
+│     • Cell Accuracy: % correct cells                         │
+│     • Empty Cell Accuracy: % correct on 0's                  │
+│     • Board Accuracy: % completely solved                    │
+│     • Loss: CrossEntropy loss value                          │
+│     • Save history to JSON                                   │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Dataset Format і Preprocessing
+
+#### Input/Output формат
+
+```python
+# CSV format
+puzzle:   "530070000600195000098000060..."  # 81 digits
+solution: "534678912672195348198342567..."  # 81 digits
+
+# After parsing
+puzzle:    [[5,3,0,...], [6,0,0,...], ...]  # (9, 9) with 0-9
+solution:  [[5,3,4,...], [6,7,2,...], ...]  # (9, 9) with 1-9
+
+# For training
+input:  torch.tensor([[5,3,0,...], ...])  # (Batch, 9, 9) with 0-9
+target: torch.tensor([[4,2,3,...], ...])  # (Batch, 9, 9) with 0-8 (solution-1)
+```
+
+#### Чому віднімаємо 1 від targets?
+
+`CrossEntropyLoss` в PyTorch очікує:
+- **Logits**: будь-які дійсні числа (Batch, Classes)
+- **Targets**: індекси класів **0-based** (0, 1, 2, ..., Classes-1)
+
+Судоку має цифри **1-9**, тому:
+```python
+# Неправильно ❌
+target = solution  # [1, 2, 3, ..., 9] - CrossEntropy очікує [0, ..., 8]
+
+# Правильно ✅
+target = solution - 1  # [0, 1, 2, ..., 8] - правильні індекси класів
+```
+
+### Loss Function: CrossEntropyLoss
+
+```python
+# Для кожної клітини маємо 9 можливих цифр (1-9)
+# Це multiclass classification задача
+
+outputs = model(inputs)  # (Batch, 9, 9, 9)
+                         #  ↑    ↑  ↑  ↑
+                         #  B    H  W  Classes
+
+# Reshape для loss
+outputs_flat = outputs.reshape(-1, 9)  # (Batch*81, 9)
+targets_flat = targets.reshape(-1)     # (Batch*81,) with values 0-8
+
+# Compute loss
+loss = nn.CrossEntropyLoss()(outputs_flat, targets_flat)
+
+# Що відбувається:
+# Для кожної з 81*Batch клітин:
+#   1. Softmax на 9 logits → ймовірності
+#   2. Negative log likelihood правильного класу
+#   3. Середнє по всіх клітинах
+```
+
+### Gradient Clipping
+
+**Чому важливо:**
+
+GNN моделі схильні до **вибухаючих градієнтів** через message passing:
+
+```python
+# Без clipping
+grad = 1000.0 → parameters explode → NaN loss
+
+# З clipping
+torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+# Якщо ||grad|| > 1.0, то grad = grad / ||grad|| × 1.0
+```
+
+### Learning Rate Scheduling
+
+```python
+scheduler = ReduceLROnPlateau(
+    optimizer,
+    mode='min',        # мінімізуємо loss
+    factor=0.5,        # LR = LR * 0.5
+    patience=3,        # якщо 3 епохи без покращення
+    verbose=True
+)
+
+# Приклад:
+# Epoch 1-5:  LR = 0.001, loss decreasing
+# Epoch 6-8:  loss plateaus
+# Epoch 9:    LR → 0.0005
+# Epoch 9-12: loss decreasing again
+# Epoch 13+:  LR → 0.00025 if needed
+```
+
+### Training Commands (детально)
+
+#### Базове тренування
+
+```bash
+python train.py --model baseline --epochs 20
+
+# Параметри за замовчуванням:
+# --data data/sudoku.csv
+# --batch-size 64
+# --lr 0.001
+# --device cuda (якщо доступно) або cpu
+# --hidden-channels 128
+```
+
+#### Продвинуті параметри
+
+```bash
+# Advanced CNN з більшою мережею
+python train.py \
+    --model advanced \
+    --hidden-channels 256 \
+    --num-residual-blocks 30 \
+    --batch-size 32 \
+    --epochs 50 \
+    --lr 0.0005
+
+# GNN з більше шарів та GAT
+python train.py \
+    --model gnn \
+    --num-gnn-layers 10 \
+    --hidden-channels 256 \
+    --batch-size 16 \
+    --epochs 40 \
+    --device cuda
+
+# RNN (LSTM)
+python train.py \
+    --model rnn \
+    --batch-size 128 \
+    --epochs 25 \
+    --lr 0.001
+```
+
+#### Resume training (продовження)
+
+```bash
+# Якщо навчання перервалося
+python train.py \
+    --model gnn \
+    --resume weights/gnn_last.pth \
+    --epochs 50
+```
+
+#### Дебаг тренування (малий датасет)
+
+```bash
+# Швидка перевірка на 1000 прикладів
+python train.py \
+    --model baseline \
+    --limit 1000 \
+    --epochs 5 \
+    --batch-size 32
+```
+
+### Metrics пояснення
+
+```python
+# 1. Cell Accuracy (загальна точність)
+correct_cells = (predictions == targets).sum()
+total_cells = predictions.numel()
+cell_accuracy = correct_cells / total_cells
+
+# Приклад: 72/81 = 88.9%
+
+# 2. Empty Cell Accuracy (точність на порожніх)
+empty_mask = (inputs == 0)
+correct_empty = (predictions == targets)[empty_mask].sum()
+total_empty = empty_mask.sum()
+empty_cell_accuracy = correct_empty / total_empty
+
+# Приклад: 30/40 = 75% (тільки на порожніх клітинах)
+
+# 3. Board Accuracy (повністю вирішені)
+board_correct = (predictions == targets).reshape(batch, -1).all(dim=1)
+board_accuracy = board_correct.float().mean()
+
+# Приклад: 5/64 = 7.8% (5 дошок з 64 повністю правильні)
+```
+
+### Checkpointing
+
+```python
+# Що зберігається:
+checkpoint = {
+    'epoch': epoch,
+    'model_state_dict': model.state_dict(),
+    'optimizer_state_dict': optimizer.state_dict(),
+    'val_loss': val_loss,
+    'val_accuracy': val_accuracy,
+    'args': vars(args)  # всі гіперпараметри
+}
+
+# Два файли:
+# 1. {model}_best.pth  - найкращий по val_loss
+# 2. {model}_last.pth  - останній стан (для resume)
+```
+
+---
+
+## 🌐 API документація
+
+### Base URL
+
+```
+http://localhost:8000
+```
+
+### Endpoints
+
+#### 1. `POST /solve` - Розв'язати судоку
+
+**Request:**
+```json
+{
+  "board": [
+    [5, 3, 0, 0, 7, 0, 0, 0, 0],
+    [6, 0, 0, 1, 9, 5, 0, 0, 0],
+    [0, 9, 8, 0, 0, 0, 0, 6, 0],
+    [8, 0, 0, 0, 6, 0, 0, 0, 3],
+    [4, 0, 0, 8, 0, 3, 0, 0, 1],
+    [7, 0, 0, 0, 2, 0, 0, 0, 6],
+    [0, 6, 0, 0, 0, 0, 2, 8, 0],
+    [0, 0, 0, 4, 1, 9, 0, 0, 5],
+    [0, 0, 0, 0, 8, 0, 0, 7, 9]
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "solution": [
+    [5, 3, 4, 6, 7, 8, 9, 1, 2],
+    [6, 7, 2, 1, 9, 5, 3, 4, 8],
+    [1, 9, 8, 3, 4, 2, 5, 6, 7],
+    [8, 5, 9, 7, 6, 1, 4, 2, 3],
+    [4, 2, 6, 8, 5, 3, 7, 9, 1],
+    [7, 1, 3, 9, 2, 4, 8, 5, 6],
+    [9, 6, 1, 5, 3, 7, 2, 8, 4],
+    [2, 8, 7, 4, 1, 9, 6, 3, 5],
+    [3, 4, 5, 2, 8, 6, 1, 7, 9]
+  ],
+  "model_used": "baseline",
+  "confidence": 0.9523
+}
+```
+
+#### 2. `GET /model` - Інформація про модель
+
+**Response:**
+```json
+{
+  "current_model": "baseline",
+  "available_models": ["baseline", "advanced", "gnn", "rnn"],
+  "model_loaded": true
+}
+```
+
+#### 3. `POST /model/switch?model_name=gnn` - Перемкнути модель
+
+**Response:**
+```json
+{
+  "message": "Switched to gnn model",
+  "success": true
+}
+```
+
+#### 4. `GET /health` - Статус здоров'я
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "model_loaded": true,
+  "device": "cuda"
+}
+```
+
+#### 5. `POST /solve/batch` - Batch розв'язування
+
+**Request:**
+```json
+{
+  "boards": [
+    {"board": [[5,3,0,...], ...]},
+    {"board": [[0,0,9,...], ...]},
+    ...
+  ]
+}
+```
+
+**Response:**
+```json
+[
+  {
+    "solution": [[5,3,4,...], ...],
+    "model_used": "gnn",
+    "confidence": 0.95
+  },
+  ...
+]
+```
+
+### Python приклад використання
+
+```python
+import requests
+
+# Solve puzzle
+url = "http://localhost:8000/solve"
+puzzle = {
+    "board": [[5,3,0,0,7,0,0,0,0], ...]
+}
+
+response = requests.post(url, json=puzzle)
+result = response.json()
+
+print(f"Model: {result['model_used']}")
+print(f"Confidence: {result['confidence']:.2%}")
+print(f"Solution: {result['solution']}")
+```
+
+---
+
+## 🎨 Frontend функціонал
+
+### Основні можливості
+
+✅ **Інтерактивна дошка** - введення чисел натисканням  
+✅ **Вибір моделі** - перемикання між 4 архітектурами  
+✅ **Генерація пазлів** - різні рівні складності  
+✅ **Верифікація** - перевірка через класичний solver  
+✅ **Метрики** - confidence та real accuracy  
+✅ **Імпорт/Експорт** - збереження в JSON  
+
+### Компоненти
+
+#### SudokuBoard.tsx
+
+Інтерактивна 9×9 дошка з:
+- Візуальним відокремленням 3×3 боксів
+- Різними кольорами для user input (чорний) та AI solution (синій)
+- Валідацією вводу (тільки 1-9)
+- Responsive design
+
+#### Controls.tsx
+
+Панель управління з:
+- Вибором моделі (CNN Baseline/Advanced, GNN, RNN)
+- Вибором складності (Easy-peasy → Impossible)
+- Кнопками дій (Solve, Clear, Verify, Generate)
+- Відображенням метрик (Confidence, Real Accuracy)
+- Імпорт/Експорт JSON
+
+### Verification логіка
+
+```typescript
+// 1. Зберігаємо початкову умову
+const [initialBoard, setInitialBoard] = useState(null);
+
+// 2. При завантаженні пазла
+loadPuzzle() {
+  setInitialBoard(puzzle);  // зберігаємо оригінал
+}
+
+// 3. При натисканні Verify
+handleVerify() {
+  // Знаходимо ідеальне рішення класичним алгоритмом
+  const groundTruth = solveSudokuClassic(initialBoard);
+  
+  // Порівнюємо з AI рішенням
+  const aiSolution = currentBoard;
+  const accuracy = calculateAccuracy(aiSolution, groundTruth);
+  
+  // Показуємо результат
+  setRealAccuracy(accuracy);
+}
+```
+
+---
+
+## 📊 Результати експериментів
+
+### Очікувані результати (після тренування)
+
+| Метрика | CNN Baseline | CNN Advanced | GNN | RNN |
+|---------|--------------|--------------|-----|-----|
+| **Cell Accuracy** | ~85-90% | ~92-95% | ~93-96% | ~80-88% |
+| **Board Accuracy** | ~30-40% | ~60-75% | ~65-80% | ~25-35% |
+| **Training Time** | ~10 min | ~30 min | ~60 min | ~15 min |
+| **Inference Speed** | 5ms | 8ms | 25ms | 7ms |
+| **Parameters** | 60K | 500K | 300K | 200K |
+
+### Чому GNN має бути найкращим теоретично?
+
+1. **Природня репрезентація** - граф явно моделює правила судоку
+2. **Attention механізм** - фокусується на найважливіших обмеженнях
+3. **Message passing** - інформація поширюється між пов'язаними клітинами
+4. **Structured inductive bias** - архітектура "знає" про структуру задачі
+
+### Чому RNN може бути гіршим?
+
+1. **Втрата 2D структури** - flatten руйнує просторову інформацію
+2. **Послідовна природа** - судоку не є природньо послідовною задачею
+3. **Відсутність явних обмежень** - не моделює row/col/box constraints
+
+---
+
+## 🛠️ Технології
+
+### Backend
+
+| Технологія | Версія | Призначення |
+|------------|--------|-------------|
+| Python | 3.9+ | Мова програмування |
+| PyTorch | 2.0+ | Deep Learning framework |
+| PyTorch Geometric | 2.3+ | Graph Neural Networks |
+| FastAPI | 0.104+ | Web framework |
+| Uvicorn | 0.24+ | ASGI server |
+| Pandas | 2.0+ | Data manipulation |
+| NumPy | 1.24+ | Numerical computing |
+| tqdm | 4.66+ | Progress bars |
+
+### Frontend
+
+| Технологія | Версія | Призначення |
+|------------|--------|-------------|
+| Next.js | 14 | React framework |
+| TypeScript | 5+ | Type-safe JavaScript |
+| TailwindCSS | 3+ | Utility-first CSS |
+| Axios | 1+ | HTTP client |
+| Lucide Icons | Latest | Icons |
+
+---
+
+## 📝 Додаткові матеріали
+
+### Google Colab
+
+Перегляньте `backend/colab_example.ipynb` для:
+- Тренування в хмарі з безкоштовним GPU
+- Покрокових інструкцій
+- Візуалізації результатів
+
+### Запуск тестів
+
+```bash
+# Тест моделей
+python -m models.cnn_baseline
+python -m models.cnn_advanced
+python -m models.gnn_model
+python -m models.rnn_model
+
+# Тест датасету
+python dataset.py
+
+# Тест inference
+python example_usage.py
+```
+
+### Скрипти швидкого запуску
+
+**Windows:**
+```batch
+# Backend
+start_backend.bat
+
+# Frontend
+start_frontend.bat
+```
+
+**Linux/Mac:**
+```bash
+# Backend
+./start_backend.sh
+
+# Frontend
+./start_frontend.sh
+```
+
+---
+
+## 🎓 Для дипломної роботи
+
+### Рекомендовані експерименти
+
+1. **Порівняльний аналіз архітектур**
+   - Тренувати всі 4 моделі на однакових даних
+   - Порівняти accuracy, швидкість, параметри
+   
+2. **Аблаційні дослідження**
+   - GNN: вплив кількості шарів (4, 6, 8, 10)
+   - CNN Advanced: вплив residual blocks (10, 15, 20, 25)
+   - Вплив gradient clipping
+   
+3. **Складність пазлів**
+   - Точність на Easy vs Hard vs Impossible
+   - Correlation між кількістю порожніх клітин та accuracy
+   
+4. **Візуалізації**
+   - Training curves (loss, accuracy)
+   - Confusion matrix для помилок
+   - Attention weights для GNN
+   - Час інференсу vs кількість параметрів
 

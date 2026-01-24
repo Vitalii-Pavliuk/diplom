@@ -11,7 +11,7 @@ import os
 from typing import List, Optional
 import numpy as np
 
-from models import CNNBaseline, CNNAdvanced, GNNModel
+from models import CNNBaseline, CNNAdvanced, GNNModel, SudokuRNN
 
 
 # Initialize FastAPI app
@@ -103,6 +103,8 @@ def load_model(model_name: str = "baseline", weights_path: Optional[str] = None)
         model = CNNAdvanced(hidden_channels=128, num_residual_blocks=20)
     elif model_name == "gnn":
         model = GNNModel(hidden_channels=128, num_layers=6)
+    elif model_name == "rnn":
+        model = SudokuRNN(embedding_dim=64, hidden_size=128, num_layers=2)
     else:
         raise ValueError(f"Unknown model: {model_name}")
     
@@ -114,9 +116,9 @@ def load_model(model_name: str = "baseline", weights_path: Optional[str] = None)
         print(f"Loading weights from: {weights_path}")
         checkpoint = torch.load(weights_path, map_location=state.device)
         model.load_state_dict(checkpoint['model_state_dict'])
-        print(f"✓ Loaded weights (Epoch {checkpoint.get('epoch', 'unknown')})")
+        print(f"[OK] Loaded weights (Epoch {checkpoint.get('epoch', 'unknown')})")
     else:
-        print(f"⚠ Warning: No weights found at {weights_path}. Using untrained model.")
+        print(f"[WARNING] No weights found at {weights_path}. Using untrained model.")
     
     model.to(state.device)
     model.eval()
@@ -125,7 +127,7 @@ def load_model(model_name: str = "baseline", weights_path: Optional[str] = None)
     state.model_name = model_name
     state.model_loaded = True
     
-    print(f"✓ Model ready on {state.device}")
+    print(f"[OK] Model ready on {state.device}")
 
 
 @app.on_event("startup")
@@ -140,7 +142,7 @@ async def startup_event():
     try:
         load_model("baseline")
     except Exception as e:
-        print(f"⚠ Warning: Could not load model: {e}")
+        print(f"[WARNING] Could not load model: {e}")
         print("API will start without a trained model.")
         state.model_loaded = False
 
@@ -168,7 +170,7 @@ async def get_model_info():
     """
     return ModelInfo(
         current_model=state.model_name,
-        available_models=["baseline", "advanced", "gnn"],
+        available_models=["baseline", "advanced", "gnn", "rnn"],
         model_loaded=state.model_loaded
     )
 
@@ -181,7 +183,7 @@ async def switch_model(model_name: str):
     Args:
         model_name: Name of the model to switch to
     """
-    if model_name not in ["baseline", "advanced", "gnn"]:
+    if model_name not in ["baseline", "advanced", "gnn", "rnn"]:
         raise HTTPException(status_code=400, detail="Invalid model name")
     
     try:
@@ -211,7 +213,13 @@ async def solve_sudoku(board: SudokuBoard):
     try:
         # Convert board to tensor
         board_array = np.array(board.board, dtype=np.int64)
-        board_tensor = torch.from_numpy(board_array).unsqueeze(0).to(state.device)
+        
+        # RNN requires flattened input (1D sequence)
+        if state.model_name == "rnn":
+            board_tensor = torch.from_numpy(board_array.flatten()).unsqueeze(0).long().to(state.device)  # (1, 81)
+        else:
+            # CNN and GNN models expect 2D input (9, 9)
+            board_tensor = torch.from_numpy(board_array).unsqueeze(0).long().to(state.device)  # (1, 9, 9)
         
         # Run inference
         with torch.no_grad():
@@ -260,7 +268,15 @@ async def solve_sudoku_batch(boards: List[SudokuBoard]):
     try:
         # Convert boards to tensor
         board_arrays = [np.array(b.board, dtype=np.int64) for b in boards]
-        board_tensor = torch.from_numpy(np.stack(board_arrays)).to(state.device)
+        
+        # RNN requires flattened input (1D sequence)
+        if state.model_name == "rnn":
+            # Flatten each board and stack
+            flattened_boards = [arr.flatten() for arr in board_arrays]
+            board_tensor = torch.from_numpy(np.stack(flattened_boards)).long().to(state.device)  # (Batch, 81)
+        else:
+            # CNN and GNN models expect 2D input (9, 9)
+            board_tensor = torch.from_numpy(np.stack(board_arrays)).long().to(state.device)  # (Batch, 9, 9)
         
         # Run inference
         with torch.no_grad():

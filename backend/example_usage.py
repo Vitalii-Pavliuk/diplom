@@ -4,7 +4,7 @@ Demonstrates how to use the models programmatically
 """
 
 import torch
-from models import CNNBaseline, CNNAdvanced, GNNModel
+from models import CNNBaseline, CNNAdvanced, GNNModel, SudokuRNN
 import numpy as np
 
 
@@ -20,20 +20,25 @@ def example_puzzle():
     return puzzle
 
 
-def solve_with_model(model, puzzle):
+def solve_with_model(model, puzzle, model_name=None):
     """
     Solve a puzzle using a model
     
     Args:
         model: PyTorch model
         puzzle: 9x9 numpy array with values 0-9
+        model_name: Name of the model ('rnn' for special handling)
         
     Returns:
         solution: 9x9 numpy array with predicted values
         confidence: Average prediction confidence
     """
-    # Convert to tensor
-    puzzle_tensor = torch.from_numpy(puzzle).unsqueeze(0).long()
+    # RNN requires flattened input
+    if model_name == 'rnn' or isinstance(model, SudokuRNN):
+        puzzle_tensor = torch.from_numpy(puzzle.flatten()).unsqueeze(0).long()  # (1, 81)
+    else:
+        # CNN and GNN expect 2D input
+        puzzle_tensor = torch.from_numpy(puzzle).unsqueeze(0).long()  # (1, 9, 9)
     
     # Inference
     model.eval()
@@ -83,19 +88,20 @@ def main():
     
     # Try each model
     models = {
-        'Baseline CNN': CNNBaseline(hidden_channels=64),
-        'Advanced CNN': CNNAdvanced(hidden_channels=128, num_residual_blocks=20),
-        'GNN': GNNModel(hidden_channels=128, num_layers=6),
+        'Baseline CNN': (CNNBaseline(hidden_channels=64), None),
+        'Advanced CNN': (CNNAdvanced(hidden_channels=128, num_residual_blocks=20), None),
+        'GNN': (GNNModel(hidden_channels=128, num_layers=6), None),
+        'RNN': (SudokuRNN(embedding_dim=64, hidden_size=128, num_layers=2), 'rnn'),
     }
     
-    for model_name, model in models.items():
+    for model_name, (model, model_type) in models.items():
         print(f"\n{'=' * 50}")
         print(f"Solving with {model_name}")
         print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
         print(f"{'=' * 50}")
         
         # Solve
-        solution, confidence = solve_with_model(model, puzzle)
+        solution, confidence = solve_with_model(model, puzzle, model_type)
         print_board(solution, f"Solution ({model_name})")
         print(f"Confidence: {confidence:.2%}")
         
