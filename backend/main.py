@@ -98,7 +98,7 @@ def load_model(model_name: str = "baseline", weights_path: Optional[str] = None)
     
     # Initialize model
     if model_name == "baseline":
-        model = CNNBaseline(hidden_channels=128)
+        model = CNNBaseline(hidden_channels=64)  # Use 64 to match saved weights
     elif model_name == "advanced":
         model = CNNAdvanced(hidden_channels=128, num_residual_blocks=20)
     elif model_name == "gnn":

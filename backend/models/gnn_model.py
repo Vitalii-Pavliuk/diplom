@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch_geometric.nn import GATv2Conv, LayerNorm
 
 class GNNModel(nn.Module):
-    def __init__(self, hidden_channels=128, num_layers=8, dropout=0.1):
+    def __init__(self, hidden_channels=128, num_layers=8, outdrop=0.1):
         super(GNNModel, self).__init__()
         self.hidden_channels = hidden_channels
         self.num_layers = num_layers
