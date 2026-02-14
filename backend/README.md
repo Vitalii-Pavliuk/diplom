@@ -94,11 +94,18 @@ python train.py --model baseline --limit 1000 --epochs 5
 # Resume from checkpoint
 python train.py --model gnn --resume weights/gnn_last.pth --epochs 50
 
+# Custom dropout for regularization
+python train.py --model baseline --dropout 0.2 --epochs 20
+python train.py --model advanced --dropout 0.3 --num-residual-blocks 20
+python train.py --model gnn --dropout 0.15 --epochs 25
+python train.py --model rnn --dropout 0.25 --epochs 20
+
 # Custom hyperparameters
 python train.py \
     --model advanced \
     --hidden-channels 256 \
     --num-residual-blocks 30 \
+    --dropout 0.25 \
     --lr 0.0005 \
     --weight-decay 1e-4 \
     --batch-size 32
@@ -117,6 +124,7 @@ python train.py \
 | `--hidden-channels` | 128 | Hidden channels for CNN/GNN |
 | `--num-residual-blocks` | 20 | Residual blocks (advanced CNN) |
 | `--num-gnn-layers` | 8 | GNN layers |
+| `--dropout` | 0.1 | Dropout rate (0.1-0.3 recommended) |
 | `--resume` | None | Path to checkpoint to resume from |
 | `--limit` | None | Limit dataset size (for debugging) |
 

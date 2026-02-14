@@ -6,10 +6,11 @@ import torch.nn.functional as F
 from torch_geometric.nn import GATv2Conv, LayerNorm
 
 class GNNModel(nn.Module):
-    def __init__(self, hidden_channels=128, num_layers=8, outdrop=0.1):
+    def __init__(self, hidden_channels=128, num_layers=8, dropout=0.1):
         super(GNNModel, self).__init__()
         self.hidden_channels = hidden_channels
         self.num_layers = num_layers
+        self.dropout = dropout
         self.embed = nn.Embedding(10, hidden_channels)
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
@@ -19,7 +20,6 @@ class GNNModel(nn.Module):
             self.norms.append(LayerNorm(hidden_channels))
 
         self.classifier = nn.Linear(hidden_channels, 9)
-        self.dropout = dropout
         self.register_buffer('single_edge_index', self._create_sudoku_edges())
 
     def _create_sudoku_edges(self):

@@ -79,8 +79,9 @@ class SudokuDataset(Dataset):
             solution = np.array([int(c) for c in solution_str], dtype=np.int64).reshape(9, 9)
         except ValueError:
             # Fallback для порожніх або битих рядків (щоб не крашити тренування)
+            # Використовуємо ones замість zeros, щоб після віднімання -1 не отримати невалідний клас -1
             puzzle = np.zeros((9, 9), dtype=np.int64)
-            solution = np.zeros((9, 9), dtype=np.int64)
+            solution = np.ones((9, 9), dtype=np.int64)  # 1 - 1 = 0 (валідний клас для CrossEntropyLoss)
 
         # Convert to tensors
         puzzle_tensor = torch.from_numpy(puzzle).long()

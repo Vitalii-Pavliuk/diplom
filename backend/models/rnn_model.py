@@ -20,12 +20,13 @@ class SudokuRNN(nn.Module):
     - Output: (Batch, 9, 9, 9) logits for each cell
     """
     
-    def __init__(self, embedding_dim: int = 64, hidden_size: int = 128, num_layers: int = 2, dropout: float = 0.1):
+    def __init__(self, embedding_dim: int = 64, hidden_size: int = 128, num_layers: int = 2, dropout: float = 0.2):
         super(SudokuRNN, self).__init__()
         
         self.embedding_dim = embedding_dim
         self.hidden_size = hidden_size
         self.num_layers = num_layers
+        self.dropout = dropout
         
         # Embedding layer: 10 classes (0-9) -> embedding_dim
         self.embedding = nn.Embedding(10, embedding_dim)

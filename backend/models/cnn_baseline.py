@@ -19,26 +19,32 @@ class CNNBaseline(nn.Module):
     - Output: (Batch, 9, 9, 9) logits for each cell
     """
     
-    def __init__(self, hidden_channels: int = 64):
+    def __init__(self, hidden_channels: int = 64, dropout: float = 0.1):
         super(CNNBaseline, self).__init__()
         
         self.hidden_channels = hidden_channels
+        self.dropout = dropout
         
         # Convolutional layers (maintaining 9x9 spatial dimensions)
         self.conv1 = nn.Conv2d(10, hidden_channels, kernel_size=3, padding=1)
         self.bn1 = nn.BatchNorm2d(hidden_channels)
+        self.dropout1 = nn.Dropout2d(dropout)
         
         self.conv2 = nn.Conv2d(hidden_channels, hidden_channels, kernel_size=3, padding=1)
         self.bn2 = nn.BatchNorm2d(hidden_channels)
+        self.dropout2 = nn.Dropout2d(dropout)
         
         self.conv3 = nn.Conv2d(hidden_channels, hidden_channels, kernel_size=3, padding=1)
         self.bn3 = nn.BatchNorm2d(hidden_channels)
+        self.dropout3 = nn.Dropout2d(dropout)
         
         self.conv4 = nn.Conv2d(hidden_channels, hidden_channels, kernel_size=3, padding=1)
         self.bn4 = nn.BatchNorm2d(hidden_channels)
+        self.dropout4 = nn.Dropout2d(dropout)
         
         self.conv5 = nn.Conv2d(hidden_channels, hidden_channels, kernel_size=3, padding=1)
         self.bn5 = nn.BatchNorm2d(hidden_channels)
+        self.dropout5 = nn.Dropout2d(dropout)
         
         # Output layer: Project to 9 classes per cell
         self.output = nn.Conv2d(hidden_channels, 9, kernel_size=1)
@@ -76,12 +82,21 @@ class CNNBaseline(nn.Module):
         # One-hot encode the input
         x = self.one_hot_encode(x)  # (Batch, 10, 9, 9)
         
-        # Convolutional layers with BatchNorm and ReLU
+        # Convolutional layers with BatchNorm, ReLU, and Dropout2d
         x = F.relu(self.bn1(self.conv1(x)))
+        x = self.dropout1(x)
+        
         x = F.relu(self.bn2(self.conv2(x)))
+        x = self.dropout2(x)
+        
         x = F.relu(self.bn3(self.conv3(x)))
+        x = self.dropout3(x)
+        
         x = F.relu(self.bn4(self.conv4(x)))
+        x = self.dropout4(x)
+        
         x = F.relu(self.bn5(self.conv5(x)))
+        x = self.dropout5(x)
         
         # Output layer
         x = self.output(x)  # (Batch, 9, 9, 9)

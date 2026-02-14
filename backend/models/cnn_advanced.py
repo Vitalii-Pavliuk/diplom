@@ -10,14 +10,15 @@ import torch.nn.functional as F
 
 class ResidualBlock(nn.Module):
     """
-    Residual Block with skip connection
+    Residual Block with skip connection and Dropout2d
     """
     
-    def __init__(self, channels: int):
+    def __init__(self, channels: int, dropout: float = 0.1):
         super(ResidualBlock, self).__init__()
         
         self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
         self.bn1 = nn.BatchNorm2d(channels)
+        self.dropout = nn.Dropout2d(dropout)
         
         self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
         self.bn2 = nn.BatchNorm2d(channels)
@@ -35,6 +36,7 @@ class ResidualBlock(nn.Module):
         identity = x
         
         out = F.relu(self.bn1(self.conv1(x)))
+        out = self.dropout(out)
         out = self.bn2(self.conv2(out))
         
         # Add skip connection
@@ -56,19 +58,21 @@ class CNNAdvanced(nn.Module):
     - Output: (Batch, 9, 9, 9) logits for each cell
     """
     
-    def __init__(self, hidden_channels: int = 128, num_residual_blocks: int = 20):
+    def __init__(self, hidden_channels: int = 128, num_residual_blocks: int = 20, dropout: float = 0.1):
         super(CNNAdvanced, self).__init__()
         
         self.hidden_channels = hidden_channels
         self.num_residual_blocks = num_residual_blocks
+        self.dropout = dropout
         
         # Initial convolution to expand from 10 to hidden_channels
         self.initial_conv = nn.Conv2d(10, hidden_channels, kernel_size=3, padding=1)
         self.initial_bn = nn.BatchNorm2d(hidden_channels)
+        self.initial_dropout = nn.Dropout2d(dropout)
         
         # Residual blocks
         self.residual_blocks = nn.ModuleList([
-            ResidualBlock(hidden_channels) for _ in range(num_residual_blocks)
+            ResidualBlock(hidden_channels, dropout) for _ in range(num_residual_blocks)
         ])
         
         # Output layer: Project to 9 classes per cell
@@ -106,8 +110,9 @@ class CNNAdvanced(nn.Module):
         # One-hot encode the input
         x = self.one_hot_encode(x)  # (Batch, 10, 9, 9)
         
-        # Initial convolution
+        # Initial convolution with dropout
         x = F.relu(self.initial_bn(self.initial_conv(x)))
+        x = self.initial_dropout(x)
         
         # Pass through residual blocks
         for residual_block in self.residual_blocks:

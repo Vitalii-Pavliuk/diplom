@@ -11,11 +11,56 @@ import argparse
 from tqdm import tqdm
 import os
 import json
+import random
+import numpy as np
 from datetime import datetime
 
 # Переконайся, що dataset.py існує
 from dataset import SudokuDataset
 # Моделі імпортуються умовно в main() - уникаємо завантаження torch_geometric
+
+
+def get_rng_state():
+    """
+    Get all RNG states for reproducibility
+    
+    Returns:
+        dict: Dictionary containing Python, NumPy, PyTorch, and CUDA RNG states
+    """
+    rng_state = {
+        'python': random.getstate(),
+        'numpy': np.random.get_state(),
+        'torch': torch.get_rng_state(),
+    }
+    
+    # Save CUDA RNG state if available
+    if torch.cuda.is_available():
+        rng_state['cuda'] = torch.cuda.get_rng_state_all()
+    
+    return rng_state
+
+
+def set_rng_state(rng_state):
+    """
+    Restore all RNG states for reproducibility
+    
+    Args:
+        rng_state: Dictionary containing RNG states from get_rng_state()
+    """
+    if rng_state is None:
+        return
+    
+    if 'python' in rng_state:
+        random.setstate(rng_state['python'])
+    
+    if 'numpy' in rng_state:
+        np.random.set_state(rng_state['numpy'])
+    
+    if 'torch' in rng_state:
+        torch.set_rng_state(rng_state['torch'])
+    
+    if 'cuda' in rng_state and torch.cuda.is_available() and rng_state['cuda'] is not None:
+        torch.cuda.set_rng_state_all(rng_state['cuda'])
 
 
 def calculate_accuracy(predictions: torch.Tensor, targets: torch.Tensor, inputs: torch.Tensor) -> dict:
@@ -221,6 +266,8 @@ def main():
                         help='Number of residual blocks (for advanced model)')
     parser.add_argument('--num-gnn-layers', type=int, default=8,
                         help='Number of GNN layers (for GNN model)')
+    parser.add_argument('--dropout', type=float, default=0.1,
+                        help='Dropout rate for all models (0.1-0.3 recommended)')
     
     # Resume training argument
     # !!! НОВИЙ АРГУМЕНТ !!!
@@ -274,25 +321,28 @@ def main():
     print("\nInitializing model...")
     if args.model == 'baseline':
         from models.cnn_baseline import CNNBaseline
-        model = CNNBaseline(hidden_channels=args.hidden_channels)
+        model = CNNBaseline(hidden_channels=args.hidden_channels, dropout=args.dropout)
     elif args.model == 'advanced':
         from models.cnn_advanced import CNNAdvanced
         model = CNNAdvanced(
             hidden_channels=args.hidden_channels,
-            num_residual_blocks=args.num_residual_blocks
+            num_residual_blocks=args.num_residual_blocks,
+            dropout=args.dropout
         )
     elif args.model == 'gnn':
         from models.gnn_model import GNNModel
         model = GNNModel(
             hidden_channels=args.hidden_channels,
-            num_layers=args.num_gnn_layers
+            num_layers=args.num_gnn_layers,
+            dropout=args.dropout
         )
     elif args.model == 'rnn':
         from models.rnn_model import SudokuRNN
         model = SudokuRNN(
             embedding_dim=64,
             hidden_size=128,
-            num_layers=2
+            num_layers=2,
+            dropout=args.dropout
         )
     
     model = model.to(args.device)
@@ -313,9 +363,23 @@ def main():
     if args.resume and os.path.exists(args.resume):
         print(f"\n🔄 Loading checkpoint from {args.resume}...")
         try:
-            checkpoint = torch.load(args.resume, map_location=args.device)
+            checkpoint = torch.load(args.resume, map_location=args.device, weights_only=False)
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            
+            # Відновлюємо scheduler state якщо він є
+            if 'scheduler_state_dict' in checkpoint:
+                scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+                print("   ✓ Scheduler state restored")
+            else:
+                print("   ⚠ No scheduler state found in checkpoint (old format)")
+            
+            # Відновлюємо RNG states якщо вони є
+            if 'rng_state' in checkpoint:
+                set_rng_state(checkpoint['rng_state'])
+                print("   ✓ RNG states restored (reproducible training)")
+            else:
+                print("   ⚠ No RNG states found in checkpoint (old format)")
             
             # Відновлюємо епоху і loss
             start_epoch = checkpoint['epoch'] + 1
@@ -379,6 +443,8 @@ def main():
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
+                'scheduler_state_dict': scheduler.state_dict(),
+                'rng_state': get_rng_state(),
                 'val_loss': val_metrics['loss'],
                 'val_accuracy': val_metrics['cell_accuracy'],
                 'args': vars(args)
@@ -391,6 +457,8 @@ def main():
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
+            'scheduler_state_dict': scheduler.state_dict(),
+            'rng_state': get_rng_state(),
             'val_loss': val_metrics['loss'],
             'val_accuracy': val_metrics['cell_accuracy'],
             'args': vars(args)
@@ -403,6 +471,8 @@ def main():
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
+                'scheduler_state_dict': scheduler.state_dict(),
+                'rng_state': get_rng_state(),
                 'val_loss': val_metrics['loss'],
                 'val_accuracy': val_metrics['cell_accuracy'],
                 'args': vars(args)
