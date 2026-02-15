@@ -308,20 +308,32 @@ def main():
     if args.resume and os.path.exists(args.resume):
         print(f"\n🔄 Loading checkpoint from {args.resume}...")
         try:
-            checkpoint = torch.load(args.resume, map_location=args.device)
+            try:
+                checkpoint = torch.load(args.resume, map_location=args.device)
+            except Exception as load_error:
+                # PyTorch 2.6+ uses weights_only=True by default.
+                # For trusted local checkpoints, fallback to full object loading.
+                print(f"⚠️ Standard torch.load failed: {load_error}")
+                print("   Retrying with weights_only=False for trusted local checkpoint...")
+                checkpoint = torch.load(args.resume, map_location=args.device, weights_only=False)
+
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            
+
             # Відновлюємо епоху і loss
             start_epoch = checkpoint['epoch'] + 1
             if 'val_loss' in checkpoint:
                 best_val_loss = checkpoint['val_loss']
-            
+
             print(f"✅ Checkpoint loaded. Resuming from epoch {start_epoch}.")
             print(f"   Previous best validation loss: {best_val_loss:.4f}")
         except Exception as e:
-            print(f"⚠️ Error loading checkpoint: {e}")
-            print("   Starting training from scratch.")
+            raise RuntimeError(
+                f"Failed to load resume checkpoint '{args.resume}'. "
+                "Please verify the checkpoint file and PyTorch version compatibility."
+            ) from e
+    elif args.resume:
+        raise FileNotFoundError(f"Resume checkpoint not found: {args.resume}")
     else:
         print("\n⭐ Starting fresh training")
     
