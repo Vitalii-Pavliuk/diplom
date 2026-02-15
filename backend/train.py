@@ -13,9 +13,8 @@ import os
 import json
 from datetime import datetime
 
-# Переконайся, що dataset.py та models/ існують
+# Переконайся, що dataset.py існує
 from dataset import SudokuDataset
-from models import CNNBaseline, CNNAdvanced, GNNModel, SudokuRNN
 
 
 def calculate_accuracy(predictions: torch.Tensor, targets: torch.Tensor, inputs: torch.Tensor) -> dict:
@@ -248,6 +247,13 @@ def main():
     if args.resume:
         print(f"Resuming from: {args.resume}")
     print("=" * 60)
+
+    if not os.path.exists(args.data):
+        raise FileNotFoundError(
+            f"Dataset file not found: '{args.data}'. "
+            f"Current working directory: '{os.getcwd()}'. "
+            "Expected CSV path like 'backend/data/sudoku.csv' or pass --data with absolute path."
+        )
     
     # Load datasets
     print("\nLoading datasets...")
@@ -273,18 +279,22 @@ def main():
     # Create model
     print("\nInitializing model...")
     if args.model == 'baseline':
+        from models import CNNBaseline
         model = CNNBaseline(hidden_channels=args.hidden_channels)
     elif args.model == 'advanced':
+        from models import CNNAdvanced
         model = CNNAdvanced(
             hidden_channels=args.hidden_channels,
             num_residual_blocks=args.num_residual_blocks
         )
     elif args.model == 'gnn':
+        from models import GNNModel
         model = GNNModel(
             hidden_channels=args.hidden_channels,
             num_layers=args.num_gnn_layers
         )
     elif args.model == 'rnn':
+        from models import SudokuRNN
         model = SudokuRNN(
             embedding_dim=64,
             hidden_size=128,
@@ -317,9 +327,16 @@ def main():
                 print("   Retrying with weights_only=False for trusted local checkpoint...")
                 checkpoint = torch.load(args.resume, map_location=args.device, weights_only=False)
 
-            model.load_state_dict(checkpoint['model_state_dict'])
+            try:
+                model.load_state_dict(checkpoint['model_state_dict'])
+            except RuntimeError as state_error:
+                ckpt_args = checkpoint.get('args', {})
+                raise RuntimeError(
+                    "Checkpoint architecture/config does not match current launch arguments. "
+                    f"Checkpoint model args: {ckpt_args}"
+                ) from state_error
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-
+            
             # Відновлюємо епоху і loss
             start_epoch = checkpoint['epoch'] + 1
             if 'val_loss' in checkpoint:
