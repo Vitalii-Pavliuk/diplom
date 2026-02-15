@@ -11,56 +11,11 @@ import argparse
 from tqdm import tqdm
 import os
 import json
-import random
-import numpy as np
 from datetime import datetime
 
-# Переконайся, що dataset.py існує
+# Переконайся, що dataset.py та models/ існують
 from dataset import SudokuDataset
-# Моделі імпортуються умовно в main() - уникаємо завантаження torch_geometric
-
-
-def get_rng_state():
-    """
-    Get all RNG states for reproducibility
-    
-    Returns:
-        dict: Dictionary containing Python, NumPy, PyTorch, and CUDA RNG states
-    """
-    rng_state = {
-        'python': random.getstate(),
-        'numpy': np.random.get_state(),
-        'torch': torch.get_rng_state(),
-    }
-    
-    # Save CUDA RNG state if available
-    if torch.cuda.is_available():
-        rng_state['cuda'] = torch.cuda.get_rng_state_all()
-    
-    return rng_state
-
-
-def set_rng_state(rng_state):
-    """
-    Restore all RNG states for reproducibility
-    
-    Args:
-        rng_state: Dictionary containing RNG states from get_rng_state()
-    """
-    if rng_state is None:
-        return
-    
-    if 'python' in rng_state:
-        random.setstate(rng_state['python'])
-    
-    if 'numpy' in rng_state:
-        np.random.set_state(rng_state['numpy'])
-    
-    if 'torch' in rng_state:
-        torch.set_rng_state(rng_state['torch'])
-    
-    if 'cuda' in rng_state and torch.cuda.is_available() and rng_state['cuda'] is not None:
-        torch.cuda.set_rng_state_all(rng_state['cuda'])
+from models import CNNBaseline, CNNAdvanced, GNNModel, SudokuRNN
 
 
 def calculate_accuracy(predictions: torch.Tensor, targets: torch.Tensor, inputs: torch.Tensor) -> dict:
@@ -266,8 +221,6 @@ def main():
                         help='Number of residual blocks (for advanced model)')
     parser.add_argument('--num-gnn-layers', type=int, default=8,
                         help='Number of GNN layers (for GNN model)')
-    parser.add_argument('--dropout', type=float, default=0.1,
-                        help='Dropout rate for all models (0.1-0.3 recommended)')
     
     # Resume training argument
     # !!! НОВИЙ АРГУМЕНТ !!!
@@ -317,32 +270,25 @@ def main():
         pin_memory=True if args.device == 'cuda' else False
     )
     
-    # Create model (з умовним імпортом - уникаємо torch_geometric для CNN/RNN)
+    # Create model
     print("\nInitializing model...")
     if args.model == 'baseline':
-        from models.cnn_baseline import CNNBaseline
-        model = CNNBaseline(hidden_channels=args.hidden_channels, dropout=args.dropout)
+        model = CNNBaseline(hidden_channels=args.hidden_channels)
     elif args.model == 'advanced':
-        from models.cnn_advanced import CNNAdvanced
         model = CNNAdvanced(
             hidden_channels=args.hidden_channels,
-            num_residual_blocks=args.num_residual_blocks,
-            dropout=args.dropout
+            num_residual_blocks=args.num_residual_blocks
         )
     elif args.model == 'gnn':
-        from models.gnn_model import GNNModel
         model = GNNModel(
             hidden_channels=args.hidden_channels,
-            num_layers=args.num_gnn_layers,
-            dropout=args.dropout
+            num_layers=args.num_gnn_layers
         )
     elif args.model == 'rnn':
-        from models.rnn_model import SudokuRNN
         model = SudokuRNN(
             embedding_dim=64,
             hidden_size=128,
-            num_layers=2,
-            dropout=args.dropout
+            num_layers=2
         )
     
     model = model.to(args.device)
@@ -358,28 +304,13 @@ def main():
     # --- RESUME LOGIC ---
     start_epoch = 1
     best_val_loss = float('inf')
-    history = []
     
     if args.resume and os.path.exists(args.resume):
         print(f"\n🔄 Loading checkpoint from {args.resume}...")
         try:
-            checkpoint = torch.load(args.resume, map_location=args.device, weights_only=False)
+            checkpoint = torch.load(args.resume, map_location=args.device)
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            
-            # Відновлюємо scheduler state якщо він є
-            if 'scheduler_state_dict' in checkpoint:
-                scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-                print("   ✓ Scheduler state restored")
-            else:
-                print("   ⚠ No scheduler state found in checkpoint (old format)")
-            
-            # Відновлюємо RNG states якщо вони є
-            if 'rng_state' in checkpoint:
-                set_rng_state(checkpoint['rng_state'])
-                print("   ✓ RNG states restored (reproducible training)")
-            else:
-                print("   ⚠ No RNG states found in checkpoint (old format)")
             
             # Відновлюємо епоху і loss
             start_epoch = checkpoint['epoch'] + 1
@@ -388,21 +319,13 @@ def main():
             
             print(f"✅ Checkpoint loaded. Resuming from epoch {start_epoch}.")
             print(f"   Previous best validation loss: {best_val_loss:.4f}")
-            
-            # Завантажуємо історію навчання якщо існує
-            history_path = os.path.join(args.save_dir, f'{args.model}_history.json')
-            if os.path.exists(history_path):
-                with open(history_path, 'r') as f:
-                    history = json.load(f)
-                print(f"   Loaded training history: {len(history)} previous epochs")
-            else:
-                print("   No previous history found, starting new history")
-                
         except Exception as e:
             print(f"⚠️ Error loading checkpoint: {e}")
             print("   Starting training from scratch.")
     else:
         print("\n⭐ Starting fresh training")
+    
+    history = []
     
     # --- TRAINING LOOP ---
     print("\nStarting training...")
@@ -430,11 +353,6 @@ def main():
             'lr': optimizer.param_groups[0]['lr']
         })
         
-        # Save training history after EVERY epoch (CRITICAL for thesis!)
-        history_path = os.path.join(args.save_dir, f'{args.model}_history.json')
-        with open(history_path, 'w') as f:
-            json.dump(history, f, indent=2)
-        
         # Save best model
         if val_metrics['loss'] < best_val_loss:
             best_val_loss = val_metrics['loss']
@@ -443,8 +361,6 @@ def main():
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'scheduler_state_dict': scheduler.state_dict(),
-                'rng_state': get_rng_state(),
                 'val_loss': val_metrics['loss'],
                 'val_accuracy': val_metrics['cell_accuracy'],
                 'args': vars(args)
@@ -452,36 +368,22 @@ def main():
             print(f"\n✓ Saved best model to {save_path}")
         
         # Save checkpoint (last state)
+        # Це корисно, якщо навчання перерветься не на найкращій епосі
         checkpoint_path = os.path.join(args.save_dir, f'{args.model}_last.pth')
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
-            'scheduler_state_dict': scheduler.state_dict(),
-            'rng_state': get_rng_state(),
             'val_loss': val_metrics['loss'],
             'val_accuracy': val_metrics['cell_accuracy'],
             'args': vars(args)
         }, checkpoint_path)
-        
-        # Optional: Create backup every 10 epochs
-        if epoch % 10 == 0:
-            backup_path = os.path.join(args.save_dir, f'{args.model}_epoch_{epoch}.pth')
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'scheduler_state_dict': scheduler.state_dict(),
-                'rng_state': get_rng_state(),
-                'val_loss': val_metrics['loss'],
-                'val_accuracy': val_metrics['cell_accuracy'],
-                'args': vars(args)
-            }, backup_path)
-            print(f"💾 Backup saved: {backup_path}")
     
-    # Final message (history already saved after each epoch)
-    print(f"\n📊 Training history saved: {history_path}")
-    print(f"   Total epochs: {len(history)}")
+    # Save training history
+    history_path = os.path.join(args.save_dir, f'{args.model}_history.json')
+    # Якщо відновлюємо, треба б дописати в старий файл, але поки просто перезаписуємо
+    with open(history_path, 'w') as f:
+        json.dump(history, f, indent=2)
     
     print("\n" + "=" * 60)
     print("Training completed!")
